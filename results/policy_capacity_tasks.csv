@@ -1,0 +1,13 @@
+task_id,tenant_id,cpu,ram_gib,sensitivity,duration_ms,arrival_ms,policy,submitted_ms,deadline_ms,node_id,tier,vm_id,latency_ms,qos_met,status,reason
+T001,team-a,2,6,low,40,0,capacity_aware,0.0,600.0,cloud-01,Cloud,VM0001,126.875,True,completed,"capacity_aware: score=0.1349, projected pressure=9.4%"
+T002,team-a,2,2,high,60,0,capacity_aware,0.0,100.0,fog-01,Fog,VM0002,84.5,True,completed,"capacity_aware: score=0.3770, projected pressure=12.5%"
+T003,team-a,3,2,low,30,0,capacity_aware,0.0,600.0,cloud-01,Cloud,VM0003,118.125,True,completed,"capacity_aware: score=0.1705, projected pressure=15.6%"
+T004,team-a,1,6,low,60,0,capacity_aware,0.0,600.0,fog-01,Fog,VM0004,87.0,True,completed,"capacity_aware: score=0.2132, projected pressure=25.0%"
+T005,team-a,2,4,low,30,0,capacity_aware,0.0,600.0,edge-01,Edge,VM0005,40.0,True,completed,"capacity_aware: score=0.1858, projected pressure=25.0%"
+T006,team-a,3,1,high,30,0,capacity_aware,0.0,100.0,fog-01,Fog,VM0006,59.5,True,completed,"capacity_aware: score=0.4520, projected pressure=37.5%"
+T007,team-a,1,4,medium,40,0,capacity_aware,0.0,220.0,cloud-01,Cloud,VM0007,128.75,True,completed,"capacity_aware: score=0.3267, projected pressure=18.8%"
+T008,team-a,2,6,medium,30,0,capacity_aware,0.0,220.0,cloud-01,Cloud,VM0008,120.625,True,completed,"capacity_aware: score=0.3747, projected pressure=28.1%"
+T009,team-a,1,2,high,40,0,capacity_aware,0.0,100.0,edge-01,Edge,VM0009,52.5,True,completed,"capacity_aware: score=0.4275, projected pressure=37.5%"
+T010,team-a,4,4,high,40,0,capacity_aware,0.0,100.0,fog-01,Fog,VM0010,74.5,True,completed,"capacity_aware: score=0.6670, projected pressure=62.5%"
+T011,team-a,1,2,low,30,0,capacity_aware,0.0,600.0,cloud-01,Cloud,VM0011,121.25,True,completed,"capacity_aware: score=0.2739, projected pressure=31.2%"
+T012,team-a,1,1,low,60,0,capacity_aware,0.0,600.0,cloud-01,Cloud,VM0012,151.562,True,completed,"capacity_aware: score=0.3017, projected pressure=32.8%"

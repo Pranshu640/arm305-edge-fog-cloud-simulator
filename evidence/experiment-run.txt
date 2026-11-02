@@ -1,0 +1,5 @@
+E1 PASS  Same workload with two policies: 10/12 placements differ. Lowest-latency completed 12; capacity-aware completed 12.
+E2 PASS  Overload and fallback: 17 completed and 13 rejected. Admitted tasks span 3 tiers.
+E3 PASS  Unauthorized tenant access: Direct read denied. Bob sees ['PRIVATE-B']. Export isolation=True.
+E4 PASS  Capacity and latency change: 4/12 placements change. Mean response 69.25 ms before and 59.292 ms after. Fog peak CPU falls from 93.75% to 43.75%; Edge peak CPU remains 100% with twice the capacity.
+Results saved to /Users/pranshubansal/Documents/ChatGPT/New project/results

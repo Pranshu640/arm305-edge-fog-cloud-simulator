@@ -1,0 +1,13 @@
+task_id,tenant_id,cpu,ram_gib,sensitivity,duration_ms,arrival_ms,policy,submitted_ms,deadline_ms,node_id,tier,vm_id,latency_ms,qos_met,status,reason
+T001,team-a,2,6,low,40,0,lowest_latency,0.0,600.0,edge-01,Edge,VM0001,52.5,True,completed,"lowest_latency: score=5.0000, projected pressure=37.5%"
+T002,team-a,2,2,high,60,0,lowest_latency,0.0,100.0,edge-01,Edge,VM0002,75.0,True,completed,"lowest_latency: score=5.0000, projected pressure=50.0%"
+T003,team-a,3,2,low,30,0,lowest_latency,0.0,600.0,edge-01,Edge,VM0003,52.5,True,completed,"lowest_latency: score=5.0000, projected pressure=87.5%"
+T004,team-a,1,6,low,60,0,lowest_latency,0.0,600.0,edge-01,Edge,VM0004,85.0,True,completed,"lowest_latency: score=5.0000, projected pressure=100.0%"
+T005,team-a,2,4,low,30,0,lowest_latency,0.0,600.0,fog-01,Fog,VM0005,54.5,True,completed,"lowest_latency: score=22.0000, projected pressure=12.5%"
+T006,team-a,3,1,high,30,0,lowest_latency,0.0,100.0,fog-01,Fog,VM0006,58.25,True,completed,"lowest_latency: score=22.0000, projected pressure=31.2%"
+T007,team-a,1,4,medium,40,0,lowest_latency,0.0,220.0,fog-01,Fog,VM0007,69.5,True,completed,"lowest_latency: score=22.0000, projected pressure=37.5%"
+T008,team-a,2,6,medium,30,0,lowest_latency,0.0,220.0,fog-01,Fog,VM0008,62.0,True,completed,"lowest_latency: score=22.0000, projected pressure=50.0%"
+T009,team-a,1,2,high,40,0,lowest_latency,0.0,100.0,fog-01,Fog,VM0009,73.25,True,completed,"lowest_latency: score=22.0000, projected pressure=56.2%"
+T010,team-a,4,4,high,40,0,lowest_latency,0.0,100.0,fog-01,Fog,VM0010,78.25,True,completed,"lowest_latency: score=22.0000, projected pressure=81.2%"
+T011,team-a,1,2,low,30,0,lowest_latency,0.0,600.0,fog-01,Fog,VM0011,69.5,True,completed,"lowest_latency: score=22.0000, projected pressure=87.5%"
+T012,team-a,1,1,low,60,0,lowest_latency,0.0,600.0,fog-01,Fog,VM0012,100.75,True,completed,"lowest_latency: score=22.0000, projected pressure=93.8%"

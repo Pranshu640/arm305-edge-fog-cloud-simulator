@@ -1,0 +1,4 @@
+node_id,tier,cpu,ram_gib,latency_ms,used_cpu,used_ram_gib,cpu_pct,ram_pct,peak_cpu_pct,peak_ram_pct
+edge-01,Edge,8,16,5,0,0,0.0,0.0,37.5,37.5
+fog-01,Fog,16,32,22,0,0,0.0,0.0,62.5,40.62
+cloud-01,Cloud,32,64,85,0,0,0.0,0.0,31.25,32.81

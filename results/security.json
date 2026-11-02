@@ -1,0 +1,33 @@
+{
+  "denied": true,
+  "export_isolated": true,
+  "bob_visible_task_ids": [
+    "PRIVATE-B"
+  ],
+  "audit": [
+    {
+      "time_ms": 0.0,
+      "user_id": "alice",
+      "tenant_id": "team-a",
+      "action": "submit",
+      "target": "PRIVATE-A",
+      "outcome": "allowed"
+    },
+    {
+      "time_ms": 0.0,
+      "user_id": "bob",
+      "tenant_id": "team-b",
+      "action": "submit",
+      "target": "PRIVATE-B",
+      "outcome": "allowed"
+    },
+    {
+      "time_ms": 0.0,
+      "user_id": "bob",
+      "tenant_id": "team-b",
+      "action": "read_task",
+      "target": "PRIVATE-A",
+      "outcome": "denied"
+    }
+  ]
+}

@@ -1,0 +1,4452 @@
+{
+  "seed": 305,
+  "model": "response_ms = base_latency_ms + duration_ms + 20 * projected_pressure",
+  "scenarios": [
+    {
+      "id": "E1",
+      "name": "Same workload with two policies",
+      "setup": "12 tasks, seed 305, burst at t=0, default nodes; fresh engine per policy.",
+      "expected": "Capacity-aware placement may distribute tasks differently. Neither policy exceeds capacity or admits a task above its latency budget.",
+      "actual": "10/12 placements differ. Lowest-latency completed 12; capacity-aware completed 12.",
+      "passed": true,
+      "evidence": [
+        "policy_latency_tasks.csv",
+        "policy_capacity_tasks.csv",
+        "comparison.png"
+      ]
+    },
+    {
+      "id": "E2",
+      "name": "Overload and fallback",
+      "setup": "30 simultaneous medium-sensitivity tasks, each 3 CPU, 6 GiB RAM and 40 ms service; lowest-latency policy.",
+      "expected": "Fill Edge, then fall back to Fog and Cloud. Reject remaining tasks when no suitable capacity remains.",
+      "actual": "17 completed and 13 rejected. Admitted tasks span 3 tiers.",
+      "passed": true,
+      "evidence": [
+        "overload_tasks.csv",
+        "overload_nodes.csv",
+        "overload_chart.png"
+      ]
+    },
+    {
+      "id": "E3",
+      "name": "Unauthorized tenant access",
+      "setup": "Alice owns PRIVATE-A. Bob owns PRIVATE-B and requests Alice's task, then exports his own records.",
+      "expected": "Deny Bob's direct read and exclude Alice's task and VM from his export.",
+      "actual": "Direct read denied. Bob sees ['PRIVATE-B']. Export isolation=True.",
+      "passed": true,
+      "evidence": [
+        "security.json"
+      ]
+    },
+    {
+      "id": "E4",
+      "name": "Capacity and latency change",
+      "setup": "Repeat E1 lowest-latency workload after changing Edge from 8 CPU/16 GiB/5 ms to 16 CPU/32 GiB/2 ms.",
+      "expected": "Larger, faster Edge admits more tasks locally and changes response time and resource utilization.",
+      "actual": "4/12 placements change. Mean response 69.25 ms before and 59.292 ms after. Fog peak CPU falls from 93.75% to 43.75%; Edge peak CPU remains 100% with twice the capacity.",
+      "passed": true,
+      "evidence": [
+        "policy_latency_tasks.csv",
+        "upgraded_edge_tasks.csv",
+        "upgraded_edge_nodes.csv",
+        "comparison.png"
+      ]
+    }
+  ],
+  "runs": {
+    "policy_latency": {
+      "summary": {
+        "total": 12,
+        "admitted": 12,
+        "completed": 12,
+        "rejected": 0,
+        "cancelled": 0,
+        "running": 0,
+        "mean_latency_ms": 69.25,
+        "qos_success_pct": 100.0,
+        "clock_ms": 100.75
+      },
+      "tasks": [
+        {
+          "task_id": "T001",
+          "tenant_id": "team-a",
+          "cpu": 2,
+          "ram_gib": 6,
+          "sensitivity": "low",
+          "duration_ms": 40,
+          "arrival_ms": 0,
+          "policy": "lowest_latency",
+          "submitted_ms": 0.0,
+          "deadline_ms": 600.0,
+          "node_id": "edge-01",
+          "tier": "Edge",
+          "vm_id": "VM0001",
+          "latency_ms": 52.5,
+          "qos_met": true,
+          "status": "completed",
+          "reason": "lowest_latency: score=5.0000, projected pressure=37.5%"
+        },
+        {
+          "task_id": "T002",
+          "tenant_id": "team-a",
+          "cpu": 2,
+          "ram_gib": 2,
+          "sensitivity": "high",
+          "duration_ms": 60,
+          "arrival_ms": 0,
+          "policy": "lowest_latency",
+          "submitted_ms": 0.0,
+          "deadline_ms": 100.0,
+          "node_id": "edge-01",
+          "tier": "Edge",
+          "vm_id": "VM0002",
+          "latency_ms": 75.0,
+          "qos_met": true,
+          "status": "completed",
+          "reason": "lowest_latency: score=5.0000, projected pressure=50.0%"
+        },
+        {
+          "task_id": "T003",
+          "tenant_id": "team-a",
+          "cpu": 3,
+          "ram_gib": 2,
+          "sensitivity": "low",
+          "duration_ms": 30,
+          "arrival_ms": 0,
+          "policy": "lowest_latency",
+          "submitted_ms": 0.0,
+          "deadline_ms": 600.0,
+          "node_id": "edge-01",
+          "tier": "Edge",
+          "vm_id": "VM0003",
+          "latency_ms": 52.5,
+          "qos_met": true,
+          "status": "completed",
+          "reason": "lowest_latency: score=5.0000, projected pressure=87.5%"
+        },
+        {
+          "task_id": "T004",
+          "tenant_id": "team-a",
+          "cpu": 1,
+          "ram_gib": 6,
+          "sensitivity": "low",
+          "duration_ms": 60,
+          "arrival_ms": 0,
+          "policy": "lowest_latency",
+          "submitted_ms": 0.0,
+          "deadline_ms": 600.0,
+          "node_id": "edge-01",
+          "tier": "Edge",
+          "vm_id": "VM0004",
+          "latency_ms": 85.0,
+          "qos_met": true,
+          "status": "completed",
+          "reason": "lowest_latency: score=5.0000, projected pressure=100.0%"
+        },
+        {
+          "task_id": "T005",
+          "tenant_id": "team-a",
+          "cpu": 2,
+          "ram_gib": 4,
+          "sensitivity": "low",
+          "duration_ms": 30,
+          "arrival_ms": 0,
+          "policy": "lowest_latency",
+          "submitted_ms": 0.0,
+          "deadline_ms": 600.0,
+          "node_id": "fog-01",
+          "tier": "Fog",
+          "vm_id": "VM0005",
+          "latency_ms": 54.5,
+          "qos_met": true,
+          "status": "completed",
+          "reason": "lowest_latency: score=22.0000, projected pressure=12.5%"
+        },
+        {
+          "task_id": "T006",
+          "tenant_id": "team-a",
+          "cpu": 3,
+          "ram_gib": 1,
+          "sensitivity": "high",
+          "duration_ms": 30,
+          "arrival_ms": 0,
+          "policy": "lowest_latency",
+          "submitted_ms": 0.0,
+          "deadline_ms": 100.0,
+          "node_id": "fog-01",
+          "tier": "Fog",
+          "vm_id": "VM0006",
+          "latency_ms": 58.25,
+          "qos_met": true,
+          "status": "completed",
+          "reason": "lowest_latency: score=22.0000, projected pressure=31.2%"
+        },
+        {
+          "task_id": "T007",
+          "tenant_id": "team-a",
+          "cpu": 1,
+          "ram_gib": 4,
+          "sensitivity": "medium",
+          "duration_ms": 40,
+          "arrival_ms": 0,
+          "policy": "lowest_latency",
+          "submitted_ms": 0.0,
+          "deadline_ms": 220.0,
+          "node_id": "fog-01",
+          "tier": "Fog",
+          "vm_id": "VM0007",
+          "latency_ms": 69.5,
+          "qos_met": true,
+          "status": "completed",
+          "reason": "lowest_latency: score=22.0000, projected pressure=37.5%"
+        },
+        {
+          "task_id": "T008",
+          "tenant_id": "team-a",
+          "cpu": 2,
+          "ram_gib": 6,
+          "sensitivity": "medium",
+          "duration_ms": 30,
+          "arrival_ms": 0,
+          "policy": "lowest_latency",
+          "submitted_ms": 0.0,
+          "deadline_ms": 220.0,
+          "node_id": "fog-01",
+          "tier": "Fog",
+          "vm_id": "VM0008",
+          "latency_ms": 62.0,
+          "qos_met": true,
+          "status": "completed",
+          "reason": "lowest_latency: score=22.0000, projected pressure=50.0%"
+        },
+        {
+          "task_id": "T009",
+          "tenant_id": "team-a",
+          "cpu": 1,
+          "ram_gib": 2,
+          "sensitivity": "high",
+          "duration_ms": 40,
+          "arrival_ms": 0,
+          "policy": "lowest_latency",
+          "submitted_ms": 0.0,
+          "deadline_ms": 100.0,
+          "node_id": "fog-01",
+          "tier": "Fog",
+          "vm_id": "VM0009",
+          "latency_ms": 73.25,
+          "qos_met": true,
+          "status": "completed",
+          "reason": "lowest_latency: score=22.0000, projected pressure=56.2%"
+        },
+        {
+          "task_id": "T010",
+          "tenant_id": "team-a",
+          "cpu": 4,
+          "ram_gib": 4,
+          "sensitivity": "high",
+          "duration_ms": 40,
+          "arrival_ms": 0,
+          "policy": "lowest_latency",
+          "submitted_ms": 0.0,
+          "deadline_ms": 100.0,
+          "node_id": "fog-01",
+          "tier": "Fog",
+          "vm_id": "VM0010",
+          "latency_ms": 78.25,
+          "qos_met": true,
+          "status": "completed",
+          "reason": "lowest_latency: score=22.0000, projected pressure=81.2%"
+        },
+        {
+          "task_id": "T011",
+          "tenant_id": "team-a",
+          "cpu": 1,
+          "ram_gib": 2,
+          "sensitivity": "low",
+          "duration_ms": 30,
+          "arrival_ms": 0,
+          "policy": "lowest_latency",
+          "submitted_ms": 0.0,
+          "deadline_ms": 600.0,
+          "node_id": "fog-01",
+          "tier": "Fog",
+          "vm_id": "VM0011",
+          "latency_ms": 69.5,
+          "qos_met": true,
+          "status": "completed",
+          "reason": "lowest_latency: score=22.0000, projected pressure=87.5%"
+        },
+        {
+          "task_id": "T012",
+          "tenant_id": "team-a",
+          "cpu": 1,
+          "ram_gib": 1,
+          "sensitivity": "low",
+          "duration_ms": 60,
+          "arrival_ms": 0,
+          "policy": "lowest_latency",
+          "submitted_ms": 0.0,
+          "deadline_ms": 600.0,
+          "node_id": "fog-01",
+          "tier": "Fog",
+          "vm_id": "VM0012",
+          "latency_ms": 100.75,
+          "qos_met": true,
+          "status": "completed",
+          "reason": "lowest_latency: score=22.0000, projected pressure=93.8%"
+        }
+      ],
+      "nodes": [
+        {
+          "node_id": "edge-01",
+          "tier": "Edge",
+          "cpu": 8,
+          "ram_gib": 16,
+          "latency_ms": 5,
+          "used_cpu": 0,
+          "used_ram_gib": 0,
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0,
+          "peak_cpu_pct": 100.0,
+          "peak_ram_pct": 100.0
+        },
+        {
+          "node_id": "fog-01",
+          "tier": "Fog",
+          "cpu": 16,
+          "ram_gib": 32,
+          "latency_ms": 22,
+          "used_cpu": 0,
+          "used_ram_gib": 0,
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0,
+          "peak_cpu_pct": 93.75,
+          "peak_ram_pct": 75.0
+        },
+        {
+          "node_id": "cloud-01",
+          "tier": "Cloud",
+          "cpu": 32,
+          "ram_gib": 64,
+          "latency_ms": 85,
+          "used_cpu": 0,
+          "used_ram_gib": 0,
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0,
+          "peak_cpu_pct": 0.0,
+          "peak_ram_pct": 0.0
+        }
+      ],
+      "workload": [
+        {
+          "task_id": "T001",
+          "tenant_id": "team-a",
+          "cpu": 2,
+          "ram_gib": 6,
+          "sensitivity": "low",
+          "duration_ms": 40,
+          "arrival_ms": 0
+        },
+        {
+          "task_id": "T002",
+          "tenant_id": "team-a",
+          "cpu": 2,
+          "ram_gib": 2,
+          "sensitivity": "high",
+          "duration_ms": 60,
+          "arrival_ms": 0
+        },
+        {
+          "task_id": "T003",
+          "tenant_id": "team-a",
+          "cpu": 3,
+          "ram_gib": 2,
+          "sensitivity": "low",
+          "duration_ms": 30,
+          "arrival_ms": 0
+        },
+        {
+          "task_id": "T004",
+          "tenant_id": "team-a",
+          "cpu": 1,
+          "ram_gib": 6,
+          "sensitivity": "low",
+          "duration_ms": 60,
+          "arrival_ms": 0
+        },
+        {
+          "task_id": "T005",
+          "tenant_id": "team-a",
+          "cpu": 2,
+          "ram_gib": 4,
+          "sensitivity": "low",
+          "duration_ms": 30,
+          "arrival_ms": 0
+        },
+        {
+          "task_id": "T006",
+          "tenant_id": "team-a",
+          "cpu": 3,
+          "ram_gib": 1,
+          "sensitivity": "high",
+          "duration_ms": 30,
+          "arrival_ms": 0
+        },
+        {
+          "task_id": "T007",
+          "tenant_id": "team-a",
+          "cpu": 1,
+          "ram_gib": 4,
+          "sensitivity": "medium",
+          "duration_ms": 40,
+          "arrival_ms": 0
+        },
+        {
+          "task_id": "T008",
+          "tenant_id": "team-a",
+          "cpu": 2,
+          "ram_gib": 6,
+          "sensitivity": "medium",
+          "duration_ms": 30,
+          "arrival_ms": 0
+        },
+        {
+          "task_id": "T009",
+          "tenant_id": "team-a",
+          "cpu": 1,
+          "ram_gib": 2,
+          "sensitivity": "high",
+          "duration_ms": 40,
+          "arrival_ms": 0
+        },
+        {
+          "task_id": "T010",
+          "tenant_id": "team-a",
+          "cpu": 4,
+          "ram_gib": 4,
+          "sensitivity": "high",
+          "duration_ms": 40,
+          "arrival_ms": 0
+        },
+        {
+          "task_id": "T011",
+          "tenant_id": "team-a",
+          "cpu": 1,
+          "ram_gib": 2,
+          "sensitivity": "low",
+          "duration_ms": 30,
+          "arrival_ms": 0
+        },
+        {
+          "task_id": "T012",
+          "tenant_id": "team-a",
+          "cpu": 1,
+          "ram_gib": 1,
+          "sensitivity": "low",
+          "duration_ms": 60,
+          "arrival_ms": 0
+        }
+      ],
+      "timeline": [
+        {
+          "time_ms": 0.0,
+          "node_id": "edge-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "fog-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "edge-01",
+          "cpu_pct": 25.0,
+          "ram_pct": 37.5
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "fog-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "edge-01",
+          "cpu_pct": 50.0,
+          "ram_pct": 50.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "fog-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "edge-01",
+          "cpu_pct": 87.5,
+          "ram_pct": 62.5
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "fog-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "edge-01",
+          "cpu_pct": 100.0,
+          "ram_pct": 100.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "fog-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "edge-01",
+          "cpu_pct": 100.0,
+          "ram_pct": 100.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "fog-01",
+          "cpu_pct": 12.5,
+          "ram_pct": 12.5
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "edge-01",
+          "cpu_pct": 100.0,
+          "ram_pct": 100.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "fog-01",
+          "cpu_pct": 31.25,
+          "ram_pct": 15.62
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "edge-01",
+          "cpu_pct": 100.0,
+          "ram_pct": 100.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "fog-01",
+          "cpu_pct": 37.5,
+          "ram_pct": 28.12
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "edge-01",
+          "cpu_pct": 100.0,
+          "ram_pct": 100.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "fog-01",
+          "cpu_pct": 50.0,
+          "ram_pct": 46.88
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "edge-01",
+          "cpu_pct": 100.0,
+          "ram_pct": 100.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "fog-01",
+          "cpu_pct": 56.25,
+          "ram_pct": 53.12
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "edge-01",
+          "cpu_pct": 100.0,
+          "ram_pct": 100.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "fog-01",
+          "cpu_pct": 81.25,
+          "ram_pct": 65.62
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "edge-01",
+          "cpu_pct": 100.0,
+          "ram_pct": 100.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "fog-01",
+          "cpu_pct": 87.5,
+          "ram_pct": 71.88
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "edge-01",
+          "cpu_pct": 100.0,
+          "ram_pct": 100.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "fog-01",
+          "cpu_pct": 93.75,
+          "ram_pct": 75.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 52.5,
+          "node_id": "edge-01",
+          "cpu_pct": 75.0,
+          "ram_pct": 62.5
+        },
+        {
+          "time_ms": 52.5,
+          "node_id": "fog-01",
+          "cpu_pct": 93.75,
+          "ram_pct": 75.0
+        },
+        {
+          "time_ms": 52.5,
+          "node_id": "cloud-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 52.5,
+          "node_id": "edge-01",
+          "cpu_pct": 37.5,
+          "ram_pct": 50.0
+        },
+        {
+          "time_ms": 52.5,
+          "node_id": "fog-01",
+          "cpu_pct": 93.75,
+          "ram_pct": 75.0
+        },
+        {
+          "time_ms": 52.5,
+          "node_id": "cloud-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 54.5,
+          "node_id": "edge-01",
+          "cpu_pct": 37.5,
+          "ram_pct": 50.0
+        },
+        {
+          "time_ms": 54.5,
+          "node_id": "fog-01",
+          "cpu_pct": 81.25,
+          "ram_pct": 62.5
+        },
+        {
+          "time_ms": 54.5,
+          "node_id": "cloud-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 58.25,
+          "node_id": "edge-01",
+          "cpu_pct": 37.5,
+          "ram_pct": 50.0
+        },
+        {
+          "time_ms": 58.25,
+          "node_id": "fog-01",
+          "cpu_pct": 62.5,
+          "ram_pct": 59.38
+        },
+        {
+          "time_ms": 58.25,
+          "node_id": "cloud-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 62.0,
+          "node_id": "edge-01",
+          "cpu_pct": 37.5,
+          "ram_pct": 50.0
+        },
+        {
+          "time_ms": 62.0,
+          "node_id": "fog-01",
+          "cpu_pct": 50.0,
+          "ram_pct": 40.62
+        },
+        {
+          "time_ms": 62.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 69.5,
+          "node_id": "edge-01",
+          "cpu_pct": 37.5,
+          "ram_pct": 50.0
+        },
+        {
+          "time_ms": 69.5,
+          "node_id": "fog-01",
+          "cpu_pct": 43.75,
+          "ram_pct": 28.12
+        },
+        {
+          "time_ms": 69.5,
+          "node_id": "cloud-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 69.5,
+          "node_id": "edge-01",
+          "cpu_pct": 37.5,
+          "ram_pct": 50.0
+        },
+        {
+          "time_ms": 69.5,
+          "node_id": "fog-01",
+          "cpu_pct": 37.5,
+          "ram_pct": 21.88
+        },
+        {
+          "time_ms": 69.5,
+          "node_id": "cloud-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 73.25,
+          "node_id": "edge-01",
+          "cpu_pct": 37.5,
+          "ram_pct": 50.0
+        },
+        {
+          "time_ms": 73.25,
+          "node_id": "fog-01",
+          "cpu_pct": 31.25,
+          "ram_pct": 15.62
+        },
+        {
+          "time_ms": 73.25,
+          "node_id": "cloud-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 75.0,
+          "node_id": "edge-01",
+          "cpu_pct": 12.5,
+          "ram_pct": 37.5
+        },
+        {
+          "time_ms": 75.0,
+          "node_id": "fog-01",
+          "cpu_pct": 31.25,
+          "ram_pct": 15.62
+        },
+        {
+          "time_ms": 75.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 78.25,
+          "node_id": "edge-01",
+          "cpu_pct": 12.5,
+          "ram_pct": 37.5
+        },
+        {
+          "time_ms": 78.25,
+          "node_id": "fog-01",
+          "cpu_pct": 6.25,
+          "ram_pct": 3.12
+        },
+        {
+          "time_ms": 78.25,
+          "node_id": "cloud-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 85.0,
+          "node_id": "edge-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 85.0,
+          "node_id": "fog-01",
+          "cpu_pct": 6.25,
+          "ram_pct": 3.12
+        },
+        {
+          "time_ms": 85.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 100.75,
+          "node_id": "edge-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 100.75,
+          "node_id": "fog-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 100.75,
+          "node_id": "cloud-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        }
+      ],
+      "policy": "lowest_latency"
+    },
+    "policy_capacity": {
+      "summary": {
+        "total": 12,
+        "admitted": 12,
+        "completed": 12,
+        "rejected": 0,
+        "cancelled": 0,
+        "running": 0,
+        "mean_latency_ms": 97.099,
+        "qos_success_pct": 100.0,
+        "clock_ms": 151.562
+      },
+      "tasks": [
+        {
+          "task_id": "T001",
+          "tenant_id": "team-a",
+          "cpu": 2,
+          "ram_gib": 6,
+          "sensitivity": "low",
+          "duration_ms": 40,
+          "arrival_ms": 0,
+          "policy": "capacity_aware",
+          "submitted_ms": 0.0,
+          "deadline_ms": 600.0,
+          "node_id": "cloud-01",
+          "tier": "Cloud",
+          "vm_id": "VM0001",
+          "latency_ms": 126.875,
+          "qos_met": true,
+          "status": "completed",
+          "reason": "capacity_aware: score=0.1349, projected pressure=9.4%"
+        },
+        {
+          "task_id": "T002",
+          "tenant_id": "team-a",
+          "cpu": 2,
+          "ram_gib": 2,
+          "sensitivity": "high",
+          "duration_ms": 60,
+          "arrival_ms": 0,
+          "policy": "capacity_aware",
+          "submitted_ms": 0.0,
+          "deadline_ms": 100.0,
+          "node_id": "fog-01",
+          "tier": "Fog",
+          "vm_id": "VM0002",
+          "latency_ms": 84.5,
+          "qos_met": true,
+          "status": "completed",
+          "reason": "capacity_aware: score=0.3770, projected pressure=12.5%"
+        },
+        {
+          "task_id": "T003",
+          "tenant_id": "team-a",
+          "cpu": 3,
+          "ram_gib": 2,
+          "sensitivity": "low",
+          "duration_ms": 30,
+          "arrival_ms": 0,
+          "policy": "capacity_aware",
+          "submitted_ms": 0.0,
+          "deadline_ms": 600.0,
+          "node_id": "cloud-01",
+          "tier": "Cloud",
+          "vm_id": "VM0003",
+          "latency_ms": 118.125,
+          "qos_met": true,
+          "status": "completed",
+          "reason": "capacity_aware: score=0.1705, projected pressure=15.6%"
+        },
+        {
+          "task_id": "T004",
+          "tenant_id": "team-a",
+          "cpu": 1,
+          "ram_gib": 6,
+          "sensitivity": "low",
+          "duration_ms": 60,
+          "arrival_ms": 0,
+          "policy": "capacity_aware",
+          "submitted_ms": 0.0,
+          "deadline_ms": 600.0,
+          "node_id": "fog-01",
+          "tier": "Fog",
+          "vm_id": "VM0004",
+          "latency_ms": 87.0,
+          "qos_met": true,
+          "status": "completed",
+          "reason": "capacity_aware: score=0.2132, projected pressure=25.0%"
+        },
+        {
+          "task_id": "T005",
+          "tenant_id": "team-a",
+          "cpu": 2,
+          "ram_gib": 4,
+          "sensitivity": "low",
+          "duration_ms": 30,
+          "arrival_ms": 0,
+          "policy": "capacity_aware",
+          "submitted_ms": 0.0,
+          "deadline_ms": 600.0,
+          "node_id": "edge-01",
+          "tier": "Edge",
+          "vm_id": "VM0005",
+          "latency_ms": 40.0,
+          "qos_met": true,
+          "status": "completed",
+          "reason": "capacity_aware: score=0.1858, projected pressure=25.0%"
+        },
+        {
+          "task_id": "T006",
+          "tenant_id": "team-a",
+          "cpu": 3,
+          "ram_gib": 1,
+          "sensitivity": "high",
+          "duration_ms": 30,
+          "arrival_ms": 0,
+          "policy": "capacity_aware",
+          "submitted_ms": 0.0,
+          "deadline_ms": 100.0,
+          "node_id": "fog-01",
+          "tier": "Fog",
+          "vm_id": "VM0006",
+          "latency_ms": 59.5,
+          "qos_met": true,
+          "status": "completed",
+          "reason": "capacity_aware: score=0.4520, projected pressure=37.5%"
+        },
+        {
+          "task_id": "T007",
+          "tenant_id": "team-a",
+          "cpu": 1,
+          "ram_gib": 4,
+          "sensitivity": "medium",
+          "duration_ms": 40,
+          "arrival_ms": 0,
+          "policy": "capacity_aware",
+          "submitted_ms": 0.0,
+          "deadline_ms": 220.0,
+          "node_id": "cloud-01",
+          "tier": "Cloud",
+          "vm_id": "VM0007",
+          "latency_ms": 128.75,
+          "qos_met": true,
+          "status": "completed",
+          "reason": "capacity_aware: score=0.3267, projected pressure=18.8%"
+        },
+        {
+          "task_id": "T008",
+          "tenant_id": "team-a",
+          "cpu": 2,
+          "ram_gib": 6,
+          "sensitivity": "medium",
+          "duration_ms": 30,
+          "arrival_ms": 0,
+          "policy": "capacity_aware",
+          "submitted_ms": 0.0,
+          "deadline_ms": 220.0,
+          "node_id": "cloud-01",
+          "tier": "Cloud",
+          "vm_id": "VM0008",
+          "latency_ms": 120.625,
+          "qos_met": true,
+          "status": "completed",
+          "reason": "capacity_aware: score=0.3747, projected pressure=28.1%"
+        },
+        {
+          "task_id": "T009",
+          "tenant_id": "team-a",
+          "cpu": 1,
+          "ram_gib": 2,
+          "sensitivity": "high",
+          "duration_ms": 40,
+          "arrival_ms": 0,
+          "policy": "capacity_aware",
+          "submitted_ms": 0.0,
+          "deadline_ms": 100.0,
+          "node_id": "edge-01",
+          "tier": "Edge",
+          "vm_id": "VM0009",
+          "latency_ms": 52.5,
+          "qos_met": true,
+          "status": "completed",
+          "reason": "capacity_aware: score=0.4275, projected pressure=37.5%"
+        },
+        {
+          "task_id": "T010",
+          "tenant_id": "team-a",
+          "cpu": 4,
+          "ram_gib": 4,
+          "sensitivity": "high",
+          "duration_ms": 40,
+          "arrival_ms": 0,
+          "policy": "capacity_aware",
+          "submitted_ms": 0.0,
+          "deadline_ms": 100.0,
+          "node_id": "fog-01",
+          "tier": "Fog",
+          "vm_id": "VM0010",
+          "latency_ms": 74.5,
+          "qos_met": true,
+          "status": "completed",
+          "reason": "capacity_aware: score=0.6670, projected pressure=62.5%"
+        },
+        {
+          "task_id": "T011",
+          "tenant_id": "team-a",
+          "cpu": 1,
+          "ram_gib": 2,
+          "sensitivity": "low",
+          "duration_ms": 30,
+          "arrival_ms": 0,
+          "policy": "capacity_aware",
+          "submitted_ms": 0.0,
+          "deadline_ms": 600.0,
+          "node_id": "cloud-01",
+          "tier": "Cloud",
+          "vm_id": "VM0011",
+          "latency_ms": 121.25,
+          "qos_met": true,
+          "status": "completed",
+          "reason": "capacity_aware: score=0.2739, projected pressure=31.2%"
+        },
+        {
+          "task_id": "T012",
+          "tenant_id": "team-a",
+          "cpu": 1,
+          "ram_gib": 1,
+          "sensitivity": "low",
+          "duration_ms": 60,
+          "arrival_ms": 0,
+          "policy": "capacity_aware",
+          "submitted_ms": 0.0,
+          "deadline_ms": 600.0,
+          "node_id": "cloud-01",
+          "tier": "Cloud",
+          "vm_id": "VM0012",
+          "latency_ms": 151.562,
+          "qos_met": true,
+          "status": "completed",
+          "reason": "capacity_aware: score=0.3017, projected pressure=32.8%"
+        }
+      ],
+      "nodes": [
+        {
+          "node_id": "edge-01",
+          "tier": "Edge",
+          "cpu": 8,
+          "ram_gib": 16,
+          "latency_ms": 5,
+          "used_cpu": 0,
+          "used_ram_gib": 0,
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0,
+          "peak_cpu_pct": 37.5,
+          "peak_ram_pct": 37.5
+        },
+        {
+          "node_id": "fog-01",
+          "tier": "Fog",
+          "cpu": 16,
+          "ram_gib": 32,
+          "latency_ms": 22,
+          "used_cpu": 0,
+          "used_ram_gib": 0,
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0,
+          "peak_cpu_pct": 62.5,
+          "peak_ram_pct": 40.62
+        },
+        {
+          "node_id": "cloud-01",
+          "tier": "Cloud",
+          "cpu": 32,
+          "ram_gib": 64,
+          "latency_ms": 85,
+          "used_cpu": 0,
+          "used_ram_gib": 0,
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0,
+          "peak_cpu_pct": 31.25,
+          "peak_ram_pct": 32.81
+        }
+      ],
+      "workload": [
+        {
+          "task_id": "T001",
+          "tenant_id": "team-a",
+          "cpu": 2,
+          "ram_gib": 6,
+          "sensitivity": "low",
+          "duration_ms": 40,
+          "arrival_ms": 0
+        },
+        {
+          "task_id": "T002",
+          "tenant_id": "team-a",
+          "cpu": 2,
+          "ram_gib": 2,
+          "sensitivity": "high",
+          "duration_ms": 60,
+          "arrival_ms": 0
+        },
+        {
+          "task_id": "T003",
+          "tenant_id": "team-a",
+          "cpu": 3,
+          "ram_gib": 2,
+          "sensitivity": "low",
+          "duration_ms": 30,
+          "arrival_ms": 0
+        },
+        {
+          "task_id": "T004",
+          "tenant_id": "team-a",
+          "cpu": 1,
+          "ram_gib": 6,
+          "sensitivity": "low",
+          "duration_ms": 60,
+          "arrival_ms": 0
+        },
+        {
+          "task_id": "T005",
+          "tenant_id": "team-a",
+          "cpu": 2,
+          "ram_gib": 4,
+          "sensitivity": "low",
+          "duration_ms": 30,
+          "arrival_ms": 0
+        },
+        {
+          "task_id": "T006",
+          "tenant_id": "team-a",
+          "cpu": 3,
+          "ram_gib": 1,
+          "sensitivity": "high",
+          "duration_ms": 30,
+          "arrival_ms": 0
+        },
+        {
+          "task_id": "T007",
+          "tenant_id": "team-a",
+          "cpu": 1,
+          "ram_gib": 4,
+          "sensitivity": "medium",
+          "duration_ms": 40,
+          "arrival_ms": 0
+        },
+        {
+          "task_id": "T008",
+          "tenant_id": "team-a",
+          "cpu": 2,
+          "ram_gib": 6,
+          "sensitivity": "medium",
+          "duration_ms": 30,
+          "arrival_ms": 0
+        },
+        {
+          "task_id": "T009",
+          "tenant_id": "team-a",
+          "cpu": 1,
+          "ram_gib": 2,
+          "sensitivity": "high",
+          "duration_ms": 40,
+          "arrival_ms": 0
+        },
+        {
+          "task_id": "T010",
+          "tenant_id": "team-a",
+          "cpu": 4,
+          "ram_gib": 4,
+          "sensitivity": "high",
+          "duration_ms": 40,
+          "arrival_ms": 0
+        },
+        {
+          "task_id": "T011",
+          "tenant_id": "team-a",
+          "cpu": 1,
+          "ram_gib": 2,
+          "sensitivity": "low",
+          "duration_ms": 30,
+          "arrival_ms": 0
+        },
+        {
+          "task_id": "T012",
+          "tenant_id": "team-a",
+          "cpu": 1,
+          "ram_gib": 1,
+          "sensitivity": "low",
+          "duration_ms": 60,
+          "arrival_ms": 0
+        }
+      ],
+      "timeline": [
+        {
+          "time_ms": 0.0,
+          "node_id": "edge-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "fog-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "edge-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "fog-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 6.25,
+          "ram_pct": 9.38
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "edge-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "fog-01",
+          "cpu_pct": 12.5,
+          "ram_pct": 6.25
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 6.25,
+          "ram_pct": 9.38
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "edge-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "fog-01",
+          "cpu_pct": 12.5,
+          "ram_pct": 6.25
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 15.62,
+          "ram_pct": 12.5
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "edge-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "fog-01",
+          "cpu_pct": 18.75,
+          "ram_pct": 25.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 15.62,
+          "ram_pct": 12.5
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "edge-01",
+          "cpu_pct": 25.0,
+          "ram_pct": 25.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "fog-01",
+          "cpu_pct": 18.75,
+          "ram_pct": 25.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 15.62,
+          "ram_pct": 12.5
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "edge-01",
+          "cpu_pct": 25.0,
+          "ram_pct": 25.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "fog-01",
+          "cpu_pct": 37.5,
+          "ram_pct": 28.12
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 15.62,
+          "ram_pct": 12.5
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "edge-01",
+          "cpu_pct": 25.0,
+          "ram_pct": 25.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "fog-01",
+          "cpu_pct": 37.5,
+          "ram_pct": 28.12
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 18.75,
+          "ram_pct": 18.75
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "edge-01",
+          "cpu_pct": 25.0,
+          "ram_pct": 25.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "fog-01",
+          "cpu_pct": 37.5,
+          "ram_pct": 28.12
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 25.0,
+          "ram_pct": 28.12
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "edge-01",
+          "cpu_pct": 37.5,
+          "ram_pct": 37.5
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "fog-01",
+          "cpu_pct": 37.5,
+          "ram_pct": 28.12
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 25.0,
+          "ram_pct": 28.12
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "edge-01",
+          "cpu_pct": 37.5,
+          "ram_pct": 37.5
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "fog-01",
+          "cpu_pct": 62.5,
+          "ram_pct": 40.62
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 25.0,
+          "ram_pct": 28.12
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "edge-01",
+          "cpu_pct": 37.5,
+          "ram_pct": 37.5
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "fog-01",
+          "cpu_pct": 62.5,
+          "ram_pct": 40.62
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 28.12,
+          "ram_pct": 31.25
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "edge-01",
+          "cpu_pct": 37.5,
+          "ram_pct": 37.5
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "fog-01",
+          "cpu_pct": 62.5,
+          "ram_pct": 40.62
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 31.25,
+          "ram_pct": 32.81
+        },
+        {
+          "time_ms": 40.0,
+          "node_id": "edge-01",
+          "cpu_pct": 12.5,
+          "ram_pct": 12.5
+        },
+        {
+          "time_ms": 40.0,
+          "node_id": "fog-01",
+          "cpu_pct": 62.5,
+          "ram_pct": 40.62
+        },
+        {
+          "time_ms": 40.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 31.25,
+          "ram_pct": 32.81
+        },
+        {
+          "time_ms": 52.5,
+          "node_id": "edge-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 52.5,
+          "node_id": "fog-01",
+          "cpu_pct": 62.5,
+          "ram_pct": 40.62
+        },
+        {
+          "time_ms": 52.5,
+          "node_id": "cloud-01",
+          "cpu_pct": 31.25,
+          "ram_pct": 32.81
+        },
+        {
+          "time_ms": 59.5,
+          "node_id": "edge-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 59.5,
+          "node_id": "fog-01",
+          "cpu_pct": 43.75,
+          "ram_pct": 37.5
+        },
+        {
+          "time_ms": 59.5,
+          "node_id": "cloud-01",
+          "cpu_pct": 31.25,
+          "ram_pct": 32.81
+        },
+        {
+          "time_ms": 74.5,
+          "node_id": "edge-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 74.5,
+          "node_id": "fog-01",
+          "cpu_pct": 18.75,
+          "ram_pct": 25.0
+        },
+        {
+          "time_ms": 74.5,
+          "node_id": "cloud-01",
+          "cpu_pct": 31.25,
+          "ram_pct": 32.81
+        },
+        {
+          "time_ms": 84.5,
+          "node_id": "edge-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 84.5,
+          "node_id": "fog-01",
+          "cpu_pct": 6.25,
+          "ram_pct": 18.75
+        },
+        {
+          "time_ms": 84.5,
+          "node_id": "cloud-01",
+          "cpu_pct": 31.25,
+          "ram_pct": 32.81
+        },
+        {
+          "time_ms": 87.0,
+          "node_id": "edge-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 87.0,
+          "node_id": "fog-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 87.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 31.25,
+          "ram_pct": 32.81
+        },
+        {
+          "time_ms": 118.125,
+          "node_id": "edge-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 118.125,
+          "node_id": "fog-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 118.125,
+          "node_id": "cloud-01",
+          "cpu_pct": 21.88,
+          "ram_pct": 29.69
+        },
+        {
+          "time_ms": 120.625,
+          "node_id": "edge-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 120.625,
+          "node_id": "fog-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 120.625,
+          "node_id": "cloud-01",
+          "cpu_pct": 15.62,
+          "ram_pct": 20.31
+        },
+        {
+          "time_ms": 121.25,
+          "node_id": "edge-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 121.25,
+          "node_id": "fog-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 121.25,
+          "node_id": "cloud-01",
+          "cpu_pct": 12.5,
+          "ram_pct": 17.19
+        },
+        {
+          "time_ms": 126.875,
+          "node_id": "edge-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 126.875,
+          "node_id": "fog-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 126.875,
+          "node_id": "cloud-01",
+          "cpu_pct": 6.25,
+          "ram_pct": 7.81
+        },
+        {
+          "time_ms": 128.75,
+          "node_id": "edge-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 128.75,
+          "node_id": "fog-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 128.75,
+          "node_id": "cloud-01",
+          "cpu_pct": 3.12,
+          "ram_pct": 1.56
+        },
+        {
+          "time_ms": 151.5625,
+          "node_id": "edge-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 151.5625,
+          "node_id": "fog-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 151.5625,
+          "node_id": "cloud-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        }
+      ],
+      "policy": "capacity_aware"
+    },
+    "overload": {
+      "summary": {
+        "total": 30,
+        "admitted": 17,
+        "completed": 17,
+        "rejected": 13,
+        "cancelled": 0,
+        "running": 0,
+        "mean_latency_ms": 107.757,
+        "qos_success_pct": 56.67,
+        "clock_ms": 143.75
+      },
+      "tasks": [
+        {
+          "task_id": "O001",
+          "tenant_id": "team-a",
+          "cpu": 3,
+          "ram_gib": 6,
+          "sensitivity": "medium",
+          "duration_ms": 40,
+          "arrival_ms": 0,
+          "policy": "lowest_latency",
+          "submitted_ms": 0.0,
+          "deadline_ms": 220.0,
+          "node_id": "edge-01",
+          "tier": "Edge",
+          "vm_id": "VM0001",
+          "latency_ms": 52.5,
+          "qos_met": true,
+          "status": "completed",
+          "reason": "lowest_latency: score=5.0000, projected pressure=37.5%"
+        },
+        {
+          "task_id": "O002",
+          "tenant_id": "team-a",
+          "cpu": 3,
+          "ram_gib": 6,
+          "sensitivity": "medium",
+          "duration_ms": 40,
+          "arrival_ms": 0,
+          "policy": "lowest_latency",
+          "submitted_ms": 0.0,
+          "deadline_ms": 220.0,
+          "node_id": "edge-01",
+          "tier": "Edge",
+          "vm_id": "VM0002",
+          "latency_ms": 60.0,
+          "qos_met": true,
+          "status": "completed",
+          "reason": "lowest_latency: score=5.0000, projected pressure=75.0%"
+        },
+        {
+          "task_id": "O003",
+          "tenant_id": "team-a",
+          "cpu": 3,
+          "ram_gib": 6,
+          "sensitivity": "medium",
+          "duration_ms": 40,
+          "arrival_ms": 0,
+          "policy": "lowest_latency",
+          "submitted_ms": 0.0,
+          "deadline_ms": 220.0,
+          "node_id": "fog-01",
+          "tier": "Fog",
+          "vm_id": "VM0003",
+          "latency_ms": 65.75,
+          "qos_met": true,
+          "status": "completed",
+          "reason": "lowest_latency: score=22.0000, projected pressure=18.8%"
+        },
+        {
+          "task_id": "O004",
+          "tenant_id": "team-a",
+          "cpu": 3,
+          "ram_gib": 6,
+          "sensitivity": "medium",
+          "duration_ms": 40,
+          "arrival_ms": 0,
+          "policy": "lowest_latency",
+          "submitted_ms": 0.0,
+          "deadline_ms": 220.0,
+          "node_id": "fog-01",
+          "tier": "Fog",
+          "vm_id": "VM0004",
+          "latency_ms": 69.5,
+          "qos_met": true,
+          "status": "completed",
+          "reason": "lowest_latency: score=22.0000, projected pressure=37.5%"
+        },
+        {
+          "task_id": "O005",
+          "tenant_id": "team-a",
+          "cpu": 3,
+          "ram_gib": 6,
+          "sensitivity": "medium",
+          "duration_ms": 40,
+          "arrival_ms": 0,
+          "policy": "lowest_latency",
+          "submitted_ms": 0.0,
+          "deadline_ms": 220.0,
+          "node_id": "fog-01",
+          "tier": "Fog",
+          "vm_id": "VM0005",
+          "latency_ms": 73.25,
+          "qos_met": true,
+          "status": "completed",
+          "reason": "lowest_latency: score=22.0000, projected pressure=56.2%"
+        },
+        {
+          "task_id": "O006",
+          "tenant_id": "team-a",
+          "cpu": 3,
+          "ram_gib": 6,
+          "sensitivity": "medium",
+          "duration_ms": 40,
+          "arrival_ms": 0,
+          "policy": "lowest_latency",
+          "submitted_ms": 0.0,
+          "deadline_ms": 220.0,
+          "node_id": "fog-01",
+          "tier": "Fog",
+          "vm_id": "VM0006",
+          "latency_ms": 77.0,
+          "qos_met": true,
+          "status": "completed",
+          "reason": "lowest_latency: score=22.0000, projected pressure=75.0%"
+        },
+        {
+          "task_id": "O007",
+          "tenant_id": "team-a",
+          "cpu": 3,
+          "ram_gib": 6,
+          "sensitivity": "medium",
+          "duration_ms": 40,
+          "arrival_ms": 0,
+          "policy": "lowest_latency",
+          "submitted_ms": 0.0,
+          "deadline_ms": 220.0,
+          "node_id": "fog-01",
+          "tier": "Fog",
+          "vm_id": "VM0007",
+          "latency_ms": 80.75,
+          "qos_met": true,
+          "status": "completed",
+          "reason": "lowest_latency: score=22.0000, projected pressure=93.8%"
+        },
+        {
+          "task_id": "O008",
+          "tenant_id": "team-a",
+          "cpu": 3,
+          "ram_gib": 6,
+          "sensitivity": "medium",
+          "duration_ms": 40,
+          "arrival_ms": 0,
+          "policy": "lowest_latency",
+          "submitted_ms": 0.0,
+          "deadline_ms": 220.0,
+          "node_id": "cloud-01",
+          "tier": "Cloud",
+          "vm_id": "VM0008",
+          "latency_ms": 126.875,
+          "qos_met": true,
+          "status": "completed",
+          "reason": "lowest_latency: score=85.0000, projected pressure=9.4%"
+        },
+        {
+          "task_id": "O009",
+          "tenant_id": "team-a",
+          "cpu": 3,
+          "ram_gib": 6,
+          "sensitivity": "medium",
+          "duration_ms": 40,
+          "arrival_ms": 0,
+          "policy": "lowest_latency",
+          "submitted_ms": 0.0,
+          "deadline_ms": 220.0,
+          "node_id": "cloud-01",
+          "tier": "Cloud",
+          "vm_id": "VM0009",
+          "latency_ms": 128.75,
+          "qos_met": true,
+          "status": "completed",
+          "reason": "lowest_latency: score=85.0000, projected pressure=18.8%"
+        },
+        {
+          "task_id": "O010",
+          "tenant_id": "team-a",
+          "cpu": 3,
+          "ram_gib": 6,
+          "sensitivity": "medium",
+          "duration_ms": 40,
+          "arrival_ms": 0,
+          "policy": "lowest_latency",
+          "submitted_ms": 0.0,
+          "deadline_ms": 220.0,
+          "node_id": "cloud-01",
+          "tier": "Cloud",
+          "vm_id": "VM0010",
+          "latency_ms": 130.625,
+          "qos_met": true,
+          "status": "completed",
+          "reason": "lowest_latency: score=85.0000, projected pressure=28.1%"
+        },
+        {
+          "task_id": "O011",
+          "tenant_id": "team-a",
+          "cpu": 3,
+          "ram_gib": 6,
+          "sensitivity": "medium",
+          "duration_ms": 40,
+          "arrival_ms": 0,
+          "policy": "lowest_latency",
+          "submitted_ms": 0.0,
+          "deadline_ms": 220.0,
+          "node_id": "cloud-01",
+          "tier": "Cloud",
+          "vm_id": "VM0011",
+          "latency_ms": 132.5,
+          "qos_met": true,
+          "status": "completed",
+          "reason": "lowest_latency: score=85.0000, projected pressure=37.5%"
+        },
+        {
+          "task_id": "O012",
+          "tenant_id": "team-a",
+          "cpu": 3,
+          "ram_gib": 6,
+          "sensitivity": "medium",
+          "duration_ms": 40,
+          "arrival_ms": 0,
+          "policy": "lowest_latency",
+          "submitted_ms": 0.0,
+          "deadline_ms": 220.0,
+          "node_id": "cloud-01",
+          "tier": "Cloud",
+          "vm_id": "VM0012",
+          "latency_ms": 134.375,
+          "qos_met": true,
+          "status": "completed",
+          "reason": "lowest_latency: score=85.0000, projected pressure=46.9%"
+        },
+        {
+          "task_id": "O013",
+          "tenant_id": "team-a",
+          "cpu": 3,
+          "ram_gib": 6,
+          "sensitivity": "medium",
+          "duration_ms": 40,
+          "arrival_ms": 0,
+          "policy": "lowest_latency",
+          "submitted_ms": 0.0,
+          "deadline_ms": 220.0,
+          "node_id": "cloud-01",
+          "tier": "Cloud",
+          "vm_id": "VM0013",
+          "latency_ms": 136.25,
+          "qos_met": true,
+          "status": "completed",
+          "reason": "lowest_latency: score=85.0000, projected pressure=56.2%"
+        },
+        {
+          "task_id": "O014",
+          "tenant_id": "team-a",
+          "cpu": 3,
+          "ram_gib": 6,
+          "sensitivity": "medium",
+          "duration_ms": 40,
+          "arrival_ms": 0,
+          "policy": "lowest_latency",
+          "submitted_ms": 0.0,
+          "deadline_ms": 220.0,
+          "node_id": "cloud-01",
+          "tier": "Cloud",
+          "vm_id": "VM0014",
+          "latency_ms": 138.125,
+          "qos_met": true,
+          "status": "completed",
+          "reason": "lowest_latency: score=85.0000, projected pressure=65.6%"
+        },
+        {
+          "task_id": "O015",
+          "tenant_id": "team-a",
+          "cpu": 3,
+          "ram_gib": 6,
+          "sensitivity": "medium",
+          "duration_ms": 40,
+          "arrival_ms": 0,
+          "policy": "lowest_latency",
+          "submitted_ms": 0.0,
+          "deadline_ms": 220.0,
+          "node_id": "cloud-01",
+          "tier": "Cloud",
+          "vm_id": "VM0015",
+          "latency_ms": 140.0,
+          "qos_met": true,
+          "status": "completed",
+          "reason": "lowest_latency: score=85.0000, projected pressure=75.0%"
+        },
+        {
+          "task_id": "O016",
+          "tenant_id": "team-a",
+          "cpu": 3,
+          "ram_gib": 6,
+          "sensitivity": "medium",
+          "duration_ms": 40,
+          "arrival_ms": 0,
+          "policy": "lowest_latency",
+          "submitted_ms": 0.0,
+          "deadline_ms": 220.0,
+          "node_id": "cloud-01",
+          "tier": "Cloud",
+          "vm_id": "VM0016",
+          "latency_ms": 141.875,
+          "qos_met": true,
+          "status": "completed",
+          "reason": "lowest_latency: score=85.0000, projected pressure=84.4%"
+        },
+        {
+          "task_id": "O017",
+          "tenant_id": "team-a",
+          "cpu": 3,
+          "ram_gib": 6,
+          "sensitivity": "medium",
+          "duration_ms": 40,
+          "arrival_ms": 0,
+          "policy": "lowest_latency",
+          "submitted_ms": 0.0,
+          "deadline_ms": 220.0,
+          "node_id": "cloud-01",
+          "tier": "Cloud",
+          "vm_id": "VM0017",
+          "latency_ms": 143.75,
+          "qos_met": true,
+          "status": "completed",
+          "reason": "lowest_latency: score=85.0000, projected pressure=93.8%"
+        },
+        {
+          "task_id": "O018",
+          "tenant_id": "team-a",
+          "cpu": 3,
+          "ram_gib": 6,
+          "sensitivity": "medium",
+          "duration_ms": 40,
+          "arrival_ms": 0,
+          "policy": "lowest_latency",
+          "submitted_ms": 0.0,
+          "deadline_ms": 220.0,
+          "node_id": null,
+          "tier": null,
+          "vm_id": null,
+          "latency_ms": null,
+          "qos_met": false,
+          "status": "rejected",
+          "reason": "No available CPU/RAM"
+        },
+        {
+          "task_id": "O019",
+          "tenant_id": "team-a",
+          "cpu": 3,
+          "ram_gib": 6,
+          "sensitivity": "medium",
+          "duration_ms": 40,
+          "arrival_ms": 0,
+          "policy": "lowest_latency",
+          "submitted_ms": 0.0,
+          "deadline_ms": 220.0,
+          "node_id": null,
+          "tier": null,
+          "vm_id": null,
+          "latency_ms": null,
+          "qos_met": false,
+          "status": "rejected",
+          "reason": "No available CPU/RAM"
+        },
+        {
+          "task_id": "O020",
+          "tenant_id": "team-a",
+          "cpu": 3,
+          "ram_gib": 6,
+          "sensitivity": "medium",
+          "duration_ms": 40,
+          "arrival_ms": 0,
+          "policy": "lowest_latency",
+          "submitted_ms": 0.0,
+          "deadline_ms": 220.0,
+          "node_id": null,
+          "tier": null,
+          "vm_id": null,
+          "latency_ms": null,
+          "qos_met": false,
+          "status": "rejected",
+          "reason": "No available CPU/RAM"
+        },
+        {
+          "task_id": "O021",
+          "tenant_id": "team-a",
+          "cpu": 3,
+          "ram_gib": 6,
+          "sensitivity": "medium",
+          "duration_ms": 40,
+          "arrival_ms": 0,
+          "policy": "lowest_latency",
+          "submitted_ms": 0.0,
+          "deadline_ms": 220.0,
+          "node_id": null,
+          "tier": null,
+          "vm_id": null,
+          "latency_ms": null,
+          "qos_met": false,
+          "status": "rejected",
+          "reason": "No available CPU/RAM"
+        },
+        {
+          "task_id": "O022",
+          "tenant_id": "team-a",
+          "cpu": 3,
+          "ram_gib": 6,
+          "sensitivity": "medium",
+          "duration_ms": 40,
+          "arrival_ms": 0,
+          "policy": "lowest_latency",
+          "submitted_ms": 0.0,
+          "deadline_ms": 220.0,
+          "node_id": null,
+          "tier": null,
+          "vm_id": null,
+          "latency_ms": null,
+          "qos_met": false,
+          "status": "rejected",
+          "reason": "No available CPU/RAM"
+        },
+        {
+          "task_id": "O023",
+          "tenant_id": "team-a",
+          "cpu": 3,
+          "ram_gib": 6,
+          "sensitivity": "medium",
+          "duration_ms": 40,
+          "arrival_ms": 0,
+          "policy": "lowest_latency",
+          "submitted_ms": 0.0,
+          "deadline_ms": 220.0,
+          "node_id": null,
+          "tier": null,
+          "vm_id": null,
+          "latency_ms": null,
+          "qos_met": false,
+          "status": "rejected",
+          "reason": "No available CPU/RAM"
+        },
+        {
+          "task_id": "O024",
+          "tenant_id": "team-a",
+          "cpu": 3,
+          "ram_gib": 6,
+          "sensitivity": "medium",
+          "duration_ms": 40,
+          "arrival_ms": 0,
+          "policy": "lowest_latency",
+          "submitted_ms": 0.0,
+          "deadline_ms": 220.0,
+          "node_id": null,
+          "tier": null,
+          "vm_id": null,
+          "latency_ms": null,
+          "qos_met": false,
+          "status": "rejected",
+          "reason": "No available CPU/RAM"
+        },
+        {
+          "task_id": "O025",
+          "tenant_id": "team-a",
+          "cpu": 3,
+          "ram_gib": 6,
+          "sensitivity": "medium",
+          "duration_ms": 40,
+          "arrival_ms": 0,
+          "policy": "lowest_latency",
+          "submitted_ms": 0.0,
+          "deadline_ms": 220.0,
+          "node_id": null,
+          "tier": null,
+          "vm_id": null,
+          "latency_ms": null,
+          "qos_met": false,
+          "status": "rejected",
+          "reason": "No available CPU/RAM"
+        },
+        {
+          "task_id": "O026",
+          "tenant_id": "team-a",
+          "cpu": 3,
+          "ram_gib": 6,
+          "sensitivity": "medium",
+          "duration_ms": 40,
+          "arrival_ms": 0,
+          "policy": "lowest_latency",
+          "submitted_ms": 0.0,
+          "deadline_ms": 220.0,
+          "node_id": null,
+          "tier": null,
+          "vm_id": null,
+          "latency_ms": null,
+          "qos_met": false,
+          "status": "rejected",
+          "reason": "No available CPU/RAM"
+        },
+        {
+          "task_id": "O027",
+          "tenant_id": "team-a",
+          "cpu": 3,
+          "ram_gib": 6,
+          "sensitivity": "medium",
+          "duration_ms": 40,
+          "arrival_ms": 0,
+          "policy": "lowest_latency",
+          "submitted_ms": 0.0,
+          "deadline_ms": 220.0,
+          "node_id": null,
+          "tier": null,
+          "vm_id": null,
+          "latency_ms": null,
+          "qos_met": false,
+          "status": "rejected",
+          "reason": "No available CPU/RAM"
+        },
+        {
+          "task_id": "O028",
+          "tenant_id": "team-a",
+          "cpu": 3,
+          "ram_gib": 6,
+          "sensitivity": "medium",
+          "duration_ms": 40,
+          "arrival_ms": 0,
+          "policy": "lowest_latency",
+          "submitted_ms": 0.0,
+          "deadline_ms": 220.0,
+          "node_id": null,
+          "tier": null,
+          "vm_id": null,
+          "latency_ms": null,
+          "qos_met": false,
+          "status": "rejected",
+          "reason": "No available CPU/RAM"
+        },
+        {
+          "task_id": "O029",
+          "tenant_id": "team-a",
+          "cpu": 3,
+          "ram_gib": 6,
+          "sensitivity": "medium",
+          "duration_ms": 40,
+          "arrival_ms": 0,
+          "policy": "lowest_latency",
+          "submitted_ms": 0.0,
+          "deadline_ms": 220.0,
+          "node_id": null,
+          "tier": null,
+          "vm_id": null,
+          "latency_ms": null,
+          "qos_met": false,
+          "status": "rejected",
+          "reason": "No available CPU/RAM"
+        },
+        {
+          "task_id": "O030",
+          "tenant_id": "team-a",
+          "cpu": 3,
+          "ram_gib": 6,
+          "sensitivity": "medium",
+          "duration_ms": 40,
+          "arrival_ms": 0,
+          "policy": "lowest_latency",
+          "submitted_ms": 0.0,
+          "deadline_ms": 220.0,
+          "node_id": null,
+          "tier": null,
+          "vm_id": null,
+          "latency_ms": null,
+          "qos_met": false,
+          "status": "rejected",
+          "reason": "No available CPU/RAM"
+        }
+      ],
+      "nodes": [
+        {
+          "node_id": "edge-01",
+          "tier": "Edge",
+          "cpu": 8,
+          "ram_gib": 16,
+          "latency_ms": 5,
+          "used_cpu": 0,
+          "used_ram_gib": 0,
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0,
+          "peak_cpu_pct": 75.0,
+          "peak_ram_pct": 75.0
+        },
+        {
+          "node_id": "fog-01",
+          "tier": "Fog",
+          "cpu": 16,
+          "ram_gib": 32,
+          "latency_ms": 22,
+          "used_cpu": 0,
+          "used_ram_gib": 0,
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0,
+          "peak_cpu_pct": 93.75,
+          "peak_ram_pct": 93.75
+        },
+        {
+          "node_id": "cloud-01",
+          "tier": "Cloud",
+          "cpu": 32,
+          "ram_gib": 64,
+          "latency_ms": 85,
+          "used_cpu": 0,
+          "used_ram_gib": 0,
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0,
+          "peak_cpu_pct": 93.75,
+          "peak_ram_pct": 93.75
+        }
+      ],
+      "workload": [
+        {
+          "task_id": "O001",
+          "tenant_id": "team-a",
+          "cpu": 3,
+          "ram_gib": 6,
+          "sensitivity": "medium",
+          "duration_ms": 40,
+          "arrival_ms": 0
+        },
+        {
+          "task_id": "O002",
+          "tenant_id": "team-a",
+          "cpu": 3,
+          "ram_gib": 6,
+          "sensitivity": "medium",
+          "duration_ms": 40,
+          "arrival_ms": 0
+        },
+        {
+          "task_id": "O003",
+          "tenant_id": "team-a",
+          "cpu": 3,
+          "ram_gib": 6,
+          "sensitivity": "medium",
+          "duration_ms": 40,
+          "arrival_ms": 0
+        },
+        {
+          "task_id": "O004",
+          "tenant_id": "team-a",
+          "cpu": 3,
+          "ram_gib": 6,
+          "sensitivity": "medium",
+          "duration_ms": 40,
+          "arrival_ms": 0
+        },
+        {
+          "task_id": "O005",
+          "tenant_id": "team-a",
+          "cpu": 3,
+          "ram_gib": 6,
+          "sensitivity": "medium",
+          "duration_ms": 40,
+          "arrival_ms": 0
+        },
+        {
+          "task_id": "O006",
+          "tenant_id": "team-a",
+          "cpu": 3,
+          "ram_gib": 6,
+          "sensitivity": "medium",
+          "duration_ms": 40,
+          "arrival_ms": 0
+        },
+        {
+          "task_id": "O007",
+          "tenant_id": "team-a",
+          "cpu": 3,
+          "ram_gib": 6,
+          "sensitivity": "medium",
+          "duration_ms": 40,
+          "arrival_ms": 0
+        },
+        {
+          "task_id": "O008",
+          "tenant_id": "team-a",
+          "cpu": 3,
+          "ram_gib": 6,
+          "sensitivity": "medium",
+          "duration_ms": 40,
+          "arrival_ms": 0
+        },
+        {
+          "task_id": "O009",
+          "tenant_id": "team-a",
+          "cpu": 3,
+          "ram_gib": 6,
+          "sensitivity": "medium",
+          "duration_ms": 40,
+          "arrival_ms": 0
+        },
+        {
+          "task_id": "O010",
+          "tenant_id": "team-a",
+          "cpu": 3,
+          "ram_gib": 6,
+          "sensitivity": "medium",
+          "duration_ms": 40,
+          "arrival_ms": 0
+        },
+        {
+          "task_id": "O011",
+          "tenant_id": "team-a",
+          "cpu": 3,
+          "ram_gib": 6,
+          "sensitivity": "medium",
+          "duration_ms": 40,
+          "arrival_ms": 0
+        },
+        {
+          "task_id": "O012",
+          "tenant_id": "team-a",
+          "cpu": 3,
+          "ram_gib": 6,
+          "sensitivity": "medium",
+          "duration_ms": 40,
+          "arrival_ms": 0
+        },
+        {
+          "task_id": "O013",
+          "tenant_id": "team-a",
+          "cpu": 3,
+          "ram_gib": 6,
+          "sensitivity": "medium",
+          "duration_ms": 40,
+          "arrival_ms": 0
+        },
+        {
+          "task_id": "O014",
+          "tenant_id": "team-a",
+          "cpu": 3,
+          "ram_gib": 6,
+          "sensitivity": "medium",
+          "duration_ms": 40,
+          "arrival_ms": 0
+        },
+        {
+          "task_id": "O015",
+          "tenant_id": "team-a",
+          "cpu": 3,
+          "ram_gib": 6,
+          "sensitivity": "medium",
+          "duration_ms": 40,
+          "arrival_ms": 0
+        },
+        {
+          "task_id": "O016",
+          "tenant_id": "team-a",
+          "cpu": 3,
+          "ram_gib": 6,
+          "sensitivity": "medium",
+          "duration_ms": 40,
+          "arrival_ms": 0
+        },
+        {
+          "task_id": "O017",
+          "tenant_id": "team-a",
+          "cpu": 3,
+          "ram_gib": 6,
+          "sensitivity": "medium",
+          "duration_ms": 40,
+          "arrival_ms": 0
+        },
+        {
+          "task_id": "O018",
+          "tenant_id": "team-a",
+          "cpu": 3,
+          "ram_gib": 6,
+          "sensitivity": "medium",
+          "duration_ms": 40,
+          "arrival_ms": 0
+        },
+        {
+          "task_id": "O019",
+          "tenant_id": "team-a",
+          "cpu": 3,
+          "ram_gib": 6,
+          "sensitivity": "medium",
+          "duration_ms": 40,
+          "arrival_ms": 0
+        },
+        {
+          "task_id": "O020",
+          "tenant_id": "team-a",
+          "cpu": 3,
+          "ram_gib": 6,
+          "sensitivity": "medium",
+          "duration_ms": 40,
+          "arrival_ms": 0
+        },
+        {
+          "task_id": "O021",
+          "tenant_id": "team-a",
+          "cpu": 3,
+          "ram_gib": 6,
+          "sensitivity": "medium",
+          "duration_ms": 40,
+          "arrival_ms": 0
+        },
+        {
+          "task_id": "O022",
+          "tenant_id": "team-a",
+          "cpu": 3,
+          "ram_gib": 6,
+          "sensitivity": "medium",
+          "duration_ms": 40,
+          "arrival_ms": 0
+        },
+        {
+          "task_id": "O023",
+          "tenant_id": "team-a",
+          "cpu": 3,
+          "ram_gib": 6,
+          "sensitivity": "medium",
+          "duration_ms": 40,
+          "arrival_ms": 0
+        },
+        {
+          "task_id": "O024",
+          "tenant_id": "team-a",
+          "cpu": 3,
+          "ram_gib": 6,
+          "sensitivity": "medium",
+          "duration_ms": 40,
+          "arrival_ms": 0
+        },
+        {
+          "task_id": "O025",
+          "tenant_id": "team-a",
+          "cpu": 3,
+          "ram_gib": 6,
+          "sensitivity": "medium",
+          "duration_ms": 40,
+          "arrival_ms": 0
+        },
+        {
+          "task_id": "O026",
+          "tenant_id": "team-a",
+          "cpu": 3,
+          "ram_gib": 6,
+          "sensitivity": "medium",
+          "duration_ms": 40,
+          "arrival_ms": 0
+        },
+        {
+          "task_id": "O027",
+          "tenant_id": "team-a",
+          "cpu": 3,
+          "ram_gib": 6,
+          "sensitivity": "medium",
+          "duration_ms": 40,
+          "arrival_ms": 0
+        },
+        {
+          "task_id": "O028",
+          "tenant_id": "team-a",
+          "cpu": 3,
+          "ram_gib": 6,
+          "sensitivity": "medium",
+          "duration_ms": 40,
+          "arrival_ms": 0
+        },
+        {
+          "task_id": "O029",
+          "tenant_id": "team-a",
+          "cpu": 3,
+          "ram_gib": 6,
+          "sensitivity": "medium",
+          "duration_ms": 40,
+          "arrival_ms": 0
+        },
+        {
+          "task_id": "O030",
+          "tenant_id": "team-a",
+          "cpu": 3,
+          "ram_gib": 6,
+          "sensitivity": "medium",
+          "duration_ms": 40,
+          "arrival_ms": 0
+        }
+      ],
+      "timeline": [
+        {
+          "time_ms": 0.0,
+          "node_id": "edge-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "fog-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "edge-01",
+          "cpu_pct": 37.5,
+          "ram_pct": 37.5
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "fog-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "edge-01",
+          "cpu_pct": 75.0,
+          "ram_pct": 75.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "fog-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "edge-01",
+          "cpu_pct": 75.0,
+          "ram_pct": 75.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "fog-01",
+          "cpu_pct": 18.75,
+          "ram_pct": 18.75
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "edge-01",
+          "cpu_pct": 75.0,
+          "ram_pct": 75.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "fog-01",
+          "cpu_pct": 37.5,
+          "ram_pct": 37.5
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "edge-01",
+          "cpu_pct": 75.0,
+          "ram_pct": 75.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "fog-01",
+          "cpu_pct": 56.25,
+          "ram_pct": 56.25
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "edge-01",
+          "cpu_pct": 75.0,
+          "ram_pct": 75.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "fog-01",
+          "cpu_pct": 75.0,
+          "ram_pct": 75.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "edge-01",
+          "cpu_pct": 75.0,
+          "ram_pct": 75.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "fog-01",
+          "cpu_pct": 93.75,
+          "ram_pct": 93.75
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "edge-01",
+          "cpu_pct": 75.0,
+          "ram_pct": 75.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "fog-01",
+          "cpu_pct": 93.75,
+          "ram_pct": 93.75
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 9.38,
+          "ram_pct": 9.38
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "edge-01",
+          "cpu_pct": 75.0,
+          "ram_pct": 75.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "fog-01",
+          "cpu_pct": 93.75,
+          "ram_pct": 93.75
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 18.75,
+          "ram_pct": 18.75
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "edge-01",
+          "cpu_pct": 75.0,
+          "ram_pct": 75.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "fog-01",
+          "cpu_pct": 93.75,
+          "ram_pct": 93.75
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 28.12,
+          "ram_pct": 28.12
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "edge-01",
+          "cpu_pct": 75.0,
+          "ram_pct": 75.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "fog-01",
+          "cpu_pct": 93.75,
+          "ram_pct": 93.75
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 37.5,
+          "ram_pct": 37.5
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "edge-01",
+          "cpu_pct": 75.0,
+          "ram_pct": 75.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "fog-01",
+          "cpu_pct": 93.75,
+          "ram_pct": 93.75
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 46.88,
+          "ram_pct": 46.88
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "edge-01",
+          "cpu_pct": 75.0,
+          "ram_pct": 75.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "fog-01",
+          "cpu_pct": 93.75,
+          "ram_pct": 93.75
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 56.25,
+          "ram_pct": 56.25
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "edge-01",
+          "cpu_pct": 75.0,
+          "ram_pct": 75.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "fog-01",
+          "cpu_pct": 93.75,
+          "ram_pct": 93.75
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 65.62,
+          "ram_pct": 65.62
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "edge-01",
+          "cpu_pct": 75.0,
+          "ram_pct": 75.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "fog-01",
+          "cpu_pct": 93.75,
+          "ram_pct": 93.75
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 75.0,
+          "ram_pct": 75.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "edge-01",
+          "cpu_pct": 75.0,
+          "ram_pct": 75.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "fog-01",
+          "cpu_pct": 93.75,
+          "ram_pct": 93.75
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 84.38,
+          "ram_pct": 84.38
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "edge-01",
+          "cpu_pct": 75.0,
+          "ram_pct": 75.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "fog-01",
+          "cpu_pct": 93.75,
+          "ram_pct": 93.75
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 93.75,
+          "ram_pct": 93.75
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "edge-01",
+          "cpu_pct": 75.0,
+          "ram_pct": 75.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "fog-01",
+          "cpu_pct": 93.75,
+          "ram_pct": 93.75
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 93.75,
+          "ram_pct": 93.75
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "edge-01",
+          "cpu_pct": 75.0,
+          "ram_pct": 75.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "fog-01",
+          "cpu_pct": 93.75,
+          "ram_pct": 93.75
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 93.75,
+          "ram_pct": 93.75
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "edge-01",
+          "cpu_pct": 75.0,
+          "ram_pct": 75.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "fog-01",
+          "cpu_pct": 93.75,
+          "ram_pct": 93.75
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 93.75,
+          "ram_pct": 93.75
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "edge-01",
+          "cpu_pct": 75.0,
+          "ram_pct": 75.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "fog-01",
+          "cpu_pct": 93.75,
+          "ram_pct": 93.75
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 93.75,
+          "ram_pct": 93.75
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "edge-01",
+          "cpu_pct": 75.0,
+          "ram_pct": 75.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "fog-01",
+          "cpu_pct": 93.75,
+          "ram_pct": 93.75
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 93.75,
+          "ram_pct": 93.75
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "edge-01",
+          "cpu_pct": 75.0,
+          "ram_pct": 75.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "fog-01",
+          "cpu_pct": 93.75,
+          "ram_pct": 93.75
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 93.75,
+          "ram_pct": 93.75
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "edge-01",
+          "cpu_pct": 75.0,
+          "ram_pct": 75.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "fog-01",
+          "cpu_pct": 93.75,
+          "ram_pct": 93.75
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 93.75,
+          "ram_pct": 93.75
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "edge-01",
+          "cpu_pct": 75.0,
+          "ram_pct": 75.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "fog-01",
+          "cpu_pct": 93.75,
+          "ram_pct": 93.75
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 93.75,
+          "ram_pct": 93.75
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "edge-01",
+          "cpu_pct": 75.0,
+          "ram_pct": 75.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "fog-01",
+          "cpu_pct": 93.75,
+          "ram_pct": 93.75
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 93.75,
+          "ram_pct": 93.75
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "edge-01",
+          "cpu_pct": 75.0,
+          "ram_pct": 75.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "fog-01",
+          "cpu_pct": 93.75,
+          "ram_pct": 93.75
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 93.75,
+          "ram_pct": 93.75
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "edge-01",
+          "cpu_pct": 75.0,
+          "ram_pct": 75.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "fog-01",
+          "cpu_pct": 93.75,
+          "ram_pct": 93.75
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 93.75,
+          "ram_pct": 93.75
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "edge-01",
+          "cpu_pct": 75.0,
+          "ram_pct": 75.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "fog-01",
+          "cpu_pct": 93.75,
+          "ram_pct": 93.75
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 93.75,
+          "ram_pct": 93.75
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "edge-01",
+          "cpu_pct": 75.0,
+          "ram_pct": 75.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "fog-01",
+          "cpu_pct": 93.75,
+          "ram_pct": 93.75
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 93.75,
+          "ram_pct": 93.75
+        },
+        {
+          "time_ms": 52.5,
+          "node_id": "edge-01",
+          "cpu_pct": 37.5,
+          "ram_pct": 37.5
+        },
+        {
+          "time_ms": 52.5,
+          "node_id": "fog-01",
+          "cpu_pct": 93.75,
+          "ram_pct": 93.75
+        },
+        {
+          "time_ms": 52.5,
+          "node_id": "cloud-01",
+          "cpu_pct": 93.75,
+          "ram_pct": 93.75
+        },
+        {
+          "time_ms": 60.0,
+          "node_id": "edge-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 60.0,
+          "node_id": "fog-01",
+          "cpu_pct": 93.75,
+          "ram_pct": 93.75
+        },
+        {
+          "time_ms": 60.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 93.75,
+          "ram_pct": 93.75
+        },
+        {
+          "time_ms": 65.75,
+          "node_id": "edge-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 65.75,
+          "node_id": "fog-01",
+          "cpu_pct": 75.0,
+          "ram_pct": 75.0
+        },
+        {
+          "time_ms": 65.75,
+          "node_id": "cloud-01",
+          "cpu_pct": 93.75,
+          "ram_pct": 93.75
+        },
+        {
+          "time_ms": 69.5,
+          "node_id": "edge-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 69.5,
+          "node_id": "fog-01",
+          "cpu_pct": 56.25,
+          "ram_pct": 56.25
+        },
+        {
+          "time_ms": 69.5,
+          "node_id": "cloud-01",
+          "cpu_pct": 93.75,
+          "ram_pct": 93.75
+        },
+        {
+          "time_ms": 73.25,
+          "node_id": "edge-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 73.25,
+          "node_id": "fog-01",
+          "cpu_pct": 37.5,
+          "ram_pct": 37.5
+        },
+        {
+          "time_ms": 73.25,
+          "node_id": "cloud-01",
+          "cpu_pct": 93.75,
+          "ram_pct": 93.75
+        },
+        {
+          "time_ms": 77.0,
+          "node_id": "edge-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 77.0,
+          "node_id": "fog-01",
+          "cpu_pct": 18.75,
+          "ram_pct": 18.75
+        },
+        {
+          "time_ms": 77.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 93.75,
+          "ram_pct": 93.75
+        },
+        {
+          "time_ms": 80.75,
+          "node_id": "edge-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 80.75,
+          "node_id": "fog-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 80.75,
+          "node_id": "cloud-01",
+          "cpu_pct": 93.75,
+          "ram_pct": 93.75
+        },
+        {
+          "time_ms": 126.875,
+          "node_id": "edge-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 126.875,
+          "node_id": "fog-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 126.875,
+          "node_id": "cloud-01",
+          "cpu_pct": 84.38,
+          "ram_pct": 84.38
+        },
+        {
+          "time_ms": 128.75,
+          "node_id": "edge-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 128.75,
+          "node_id": "fog-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 128.75,
+          "node_id": "cloud-01",
+          "cpu_pct": 75.0,
+          "ram_pct": 75.0
+        },
+        {
+          "time_ms": 130.625,
+          "node_id": "edge-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 130.625,
+          "node_id": "fog-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 130.625,
+          "node_id": "cloud-01",
+          "cpu_pct": 65.62,
+          "ram_pct": 65.62
+        },
+        {
+          "time_ms": 132.5,
+          "node_id": "edge-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 132.5,
+          "node_id": "fog-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 132.5,
+          "node_id": "cloud-01",
+          "cpu_pct": 56.25,
+          "ram_pct": 56.25
+        },
+        {
+          "time_ms": 134.375,
+          "node_id": "edge-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 134.375,
+          "node_id": "fog-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 134.375,
+          "node_id": "cloud-01",
+          "cpu_pct": 46.88,
+          "ram_pct": 46.88
+        },
+        {
+          "time_ms": 136.25,
+          "node_id": "edge-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 136.25,
+          "node_id": "fog-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 136.25,
+          "node_id": "cloud-01",
+          "cpu_pct": 37.5,
+          "ram_pct": 37.5
+        },
+        {
+          "time_ms": 138.125,
+          "node_id": "edge-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 138.125,
+          "node_id": "fog-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 138.125,
+          "node_id": "cloud-01",
+          "cpu_pct": 28.12,
+          "ram_pct": 28.12
+        },
+        {
+          "time_ms": 140.0,
+          "node_id": "edge-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 140.0,
+          "node_id": "fog-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 140.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 18.75,
+          "ram_pct": 18.75
+        },
+        {
+          "time_ms": 141.875,
+          "node_id": "edge-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 141.875,
+          "node_id": "fog-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 141.875,
+          "node_id": "cloud-01",
+          "cpu_pct": 9.38,
+          "ram_pct": 9.38
+        },
+        {
+          "time_ms": 143.75,
+          "node_id": "edge-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 143.75,
+          "node_id": "fog-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 143.75,
+          "node_id": "cloud-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        }
+      ],
+      "policy": "lowest_latency"
+    },
+    "upgraded_edge": {
+      "summary": {
+        "total": 12,
+        "admitted": 12,
+        "completed": 12,
+        "rejected": 0,
+        "cancelled": 0,
+        "running": 0,
+        "mean_latency_ms": 59.292,
+        "qos_success_pct": 100.0,
+        "clock_ms": 90.75
+      },
+      "tasks": [
+        {
+          "task_id": "T001",
+          "tenant_id": "team-a",
+          "cpu": 2,
+          "ram_gib": 6,
+          "sensitivity": "low",
+          "duration_ms": 40,
+          "arrival_ms": 0,
+          "policy": "lowest_latency",
+          "submitted_ms": 0.0,
+          "deadline_ms": 600.0,
+          "node_id": "edge-01",
+          "tier": "Edge",
+          "vm_id": "VM0001",
+          "latency_ms": 45.75,
+          "qos_met": true,
+          "status": "completed",
+          "reason": "lowest_latency: score=2.0000, projected pressure=18.8%"
+        },
+        {
+          "task_id": "T002",
+          "tenant_id": "team-a",
+          "cpu": 2,
+          "ram_gib": 2,
+          "sensitivity": "high",
+          "duration_ms": 60,
+          "arrival_ms": 0,
+          "policy": "lowest_latency",
+          "submitted_ms": 0.0,
+          "deadline_ms": 100.0,
+          "node_id": "edge-01",
+          "tier": "Edge",
+          "vm_id": "VM0002",
+          "latency_ms": 67.0,
+          "qos_met": true,
+          "status": "completed",
+          "reason": "lowest_latency: score=2.0000, projected pressure=25.0%"
+        },
+        {
+          "task_id": "T003",
+          "tenant_id": "team-a",
+          "cpu": 3,
+          "ram_gib": 2,
+          "sensitivity": "low",
+          "duration_ms": 30,
+          "arrival_ms": 0,
+          "policy": "lowest_latency",
+          "submitted_ms": 0.0,
+          "deadline_ms": 600.0,
+          "node_id": "edge-01",
+          "tier": "Edge",
+          "vm_id": "VM0003",
+          "latency_ms": 40.75,
+          "qos_met": true,
+          "status": "completed",
+          "reason": "lowest_latency: score=2.0000, projected pressure=43.8%"
+        },
+        {
+          "task_id": "T004",
+          "tenant_id": "team-a",
+          "cpu": 1,
+          "ram_gib": 6,
+          "sensitivity": "low",
+          "duration_ms": 60,
+          "arrival_ms": 0,
+          "policy": "lowest_latency",
+          "submitted_ms": 0.0,
+          "deadline_ms": 600.0,
+          "node_id": "edge-01",
+          "tier": "Edge",
+          "vm_id": "VM0004",
+          "latency_ms": 72.0,
+          "qos_met": true,
+          "status": "completed",
+          "reason": "lowest_latency: score=2.0000, projected pressure=50.0%"
+        },
+        {
+          "task_id": "T005",
+          "tenant_id": "team-a",
+          "cpu": 2,
+          "ram_gib": 4,
+          "sensitivity": "low",
+          "duration_ms": 30,
+          "arrival_ms": 0,
+          "policy": "lowest_latency",
+          "submitted_ms": 0.0,
+          "deadline_ms": 600.0,
+          "node_id": "edge-01",
+          "tier": "Edge",
+          "vm_id": "VM0005",
+          "latency_ms": 44.5,
+          "qos_met": true,
+          "status": "completed",
+          "reason": "lowest_latency: score=2.0000, projected pressure=62.5%"
+        },
+        {
+          "task_id": "T006",
+          "tenant_id": "team-a",
+          "cpu": 3,
+          "ram_gib": 1,
+          "sensitivity": "high",
+          "duration_ms": 30,
+          "arrival_ms": 0,
+          "policy": "lowest_latency",
+          "submitted_ms": 0.0,
+          "deadline_ms": 100.0,
+          "node_id": "edge-01",
+          "tier": "Edge",
+          "vm_id": "VM0006",
+          "latency_ms": 48.25,
+          "qos_met": true,
+          "status": "completed",
+          "reason": "lowest_latency: score=2.0000, projected pressure=81.2%"
+        },
+        {
+          "task_id": "T007",
+          "tenant_id": "team-a",
+          "cpu": 1,
+          "ram_gib": 4,
+          "sensitivity": "medium",
+          "duration_ms": 40,
+          "arrival_ms": 0,
+          "policy": "lowest_latency",
+          "submitted_ms": 0.0,
+          "deadline_ms": 220.0,
+          "node_id": "edge-01",
+          "tier": "Edge",
+          "vm_id": "VM0007",
+          "latency_ms": 59.5,
+          "qos_met": true,
+          "status": "completed",
+          "reason": "lowest_latency: score=2.0000, projected pressure=87.5%"
+        },
+        {
+          "task_id": "T008",
+          "tenant_id": "team-a",
+          "cpu": 2,
+          "ram_gib": 6,
+          "sensitivity": "medium",
+          "duration_ms": 30,
+          "arrival_ms": 0,
+          "policy": "lowest_latency",
+          "submitted_ms": 0.0,
+          "deadline_ms": 220.0,
+          "node_id": "edge-01",
+          "tier": "Edge",
+          "vm_id": "VM0008",
+          "latency_ms": 52.0,
+          "qos_met": true,
+          "status": "completed",
+          "reason": "lowest_latency: score=2.0000, projected pressure=100.0%"
+        },
+        {
+          "task_id": "T009",
+          "tenant_id": "team-a",
+          "cpu": 1,
+          "ram_gib": 2,
+          "sensitivity": "high",
+          "duration_ms": 40,
+          "arrival_ms": 0,
+          "policy": "lowest_latency",
+          "submitted_ms": 0.0,
+          "deadline_ms": 100.0,
+          "node_id": "fog-01",
+          "tier": "Fog",
+          "vm_id": "VM0009",
+          "latency_ms": 63.25,
+          "qos_met": true,
+          "status": "completed",
+          "reason": "lowest_latency: score=22.0000, projected pressure=6.2%"
+        },
+        {
+          "task_id": "T010",
+          "tenant_id": "team-a",
+          "cpu": 4,
+          "ram_gib": 4,
+          "sensitivity": "high",
+          "duration_ms": 40,
+          "arrival_ms": 0,
+          "policy": "lowest_latency",
+          "submitted_ms": 0.0,
+          "deadline_ms": 100.0,
+          "node_id": "fog-01",
+          "tier": "Fog",
+          "vm_id": "VM0010",
+          "latency_ms": 68.25,
+          "qos_met": true,
+          "status": "completed",
+          "reason": "lowest_latency: score=22.0000, projected pressure=31.2%"
+        },
+        {
+          "task_id": "T011",
+          "tenant_id": "team-a",
+          "cpu": 1,
+          "ram_gib": 2,
+          "sensitivity": "low",
+          "duration_ms": 30,
+          "arrival_ms": 0,
+          "policy": "lowest_latency",
+          "submitted_ms": 0.0,
+          "deadline_ms": 600.0,
+          "node_id": "fog-01",
+          "tier": "Fog",
+          "vm_id": "VM0011",
+          "latency_ms": 59.5,
+          "qos_met": true,
+          "status": "completed",
+          "reason": "lowest_latency: score=22.0000, projected pressure=37.5%"
+        },
+        {
+          "task_id": "T012",
+          "tenant_id": "team-a",
+          "cpu": 1,
+          "ram_gib": 1,
+          "sensitivity": "low",
+          "duration_ms": 60,
+          "arrival_ms": 0,
+          "policy": "lowest_latency",
+          "submitted_ms": 0.0,
+          "deadline_ms": 600.0,
+          "node_id": "fog-01",
+          "tier": "Fog",
+          "vm_id": "VM0012",
+          "latency_ms": 90.75,
+          "qos_met": true,
+          "status": "completed",
+          "reason": "lowest_latency: score=22.0000, projected pressure=43.8%"
+        }
+      ],
+      "nodes": [
+        {
+          "node_id": "edge-01",
+          "tier": "Edge",
+          "cpu": 16,
+          "ram_gib": 32,
+          "latency_ms": 2,
+          "used_cpu": 0,
+          "used_ram_gib": 0,
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0,
+          "peak_cpu_pct": 100.0,
+          "peak_ram_pct": 96.88
+        },
+        {
+          "node_id": "fog-01",
+          "tier": "Fog",
+          "cpu": 16,
+          "ram_gib": 32,
+          "latency_ms": 22,
+          "used_cpu": 0,
+          "used_ram_gib": 0,
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0,
+          "peak_cpu_pct": 43.75,
+          "peak_ram_pct": 28.12
+        },
+        {
+          "node_id": "cloud-01",
+          "tier": "Cloud",
+          "cpu": 32,
+          "ram_gib": 64,
+          "latency_ms": 85,
+          "used_cpu": 0,
+          "used_ram_gib": 0,
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0,
+          "peak_cpu_pct": 0.0,
+          "peak_ram_pct": 0.0
+        }
+      ],
+      "workload": [
+        {
+          "task_id": "T001",
+          "tenant_id": "team-a",
+          "cpu": 2,
+          "ram_gib": 6,
+          "sensitivity": "low",
+          "duration_ms": 40,
+          "arrival_ms": 0
+        },
+        {
+          "task_id": "T002",
+          "tenant_id": "team-a",
+          "cpu": 2,
+          "ram_gib": 2,
+          "sensitivity": "high",
+          "duration_ms": 60,
+          "arrival_ms": 0
+        },
+        {
+          "task_id": "T003",
+          "tenant_id": "team-a",
+          "cpu": 3,
+          "ram_gib": 2,
+          "sensitivity": "low",
+          "duration_ms": 30,
+          "arrival_ms": 0
+        },
+        {
+          "task_id": "T004",
+          "tenant_id": "team-a",
+          "cpu": 1,
+          "ram_gib": 6,
+          "sensitivity": "low",
+          "duration_ms": 60,
+          "arrival_ms": 0
+        },
+        {
+          "task_id": "T005",
+          "tenant_id": "team-a",
+          "cpu": 2,
+          "ram_gib": 4,
+          "sensitivity": "low",
+          "duration_ms": 30,
+          "arrival_ms": 0
+        },
+        {
+          "task_id": "T006",
+          "tenant_id": "team-a",
+          "cpu": 3,
+          "ram_gib": 1,
+          "sensitivity": "high",
+          "duration_ms": 30,
+          "arrival_ms": 0
+        },
+        {
+          "task_id": "T007",
+          "tenant_id": "team-a",
+          "cpu": 1,
+          "ram_gib": 4,
+          "sensitivity": "medium",
+          "duration_ms": 40,
+          "arrival_ms": 0
+        },
+        {
+          "task_id": "T008",
+          "tenant_id": "team-a",
+          "cpu": 2,
+          "ram_gib": 6,
+          "sensitivity": "medium",
+          "duration_ms": 30,
+          "arrival_ms": 0
+        },
+        {
+          "task_id": "T009",
+          "tenant_id": "team-a",
+          "cpu": 1,
+          "ram_gib": 2,
+          "sensitivity": "high",
+          "duration_ms": 40,
+          "arrival_ms": 0
+        },
+        {
+          "task_id": "T010",
+          "tenant_id": "team-a",
+          "cpu": 4,
+          "ram_gib": 4,
+          "sensitivity": "high",
+          "duration_ms": 40,
+          "arrival_ms": 0
+        },
+        {
+          "task_id": "T011",
+          "tenant_id": "team-a",
+          "cpu": 1,
+          "ram_gib": 2,
+          "sensitivity": "low",
+          "duration_ms": 30,
+          "arrival_ms": 0
+        },
+        {
+          "task_id": "T012",
+          "tenant_id": "team-a",
+          "cpu": 1,
+          "ram_gib": 1,
+          "sensitivity": "low",
+          "duration_ms": 60,
+          "arrival_ms": 0
+        }
+      ],
+      "timeline": [
+        {
+          "time_ms": 0.0,
+          "node_id": "edge-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "fog-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "edge-01",
+          "cpu_pct": 12.5,
+          "ram_pct": 18.75
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "fog-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "edge-01",
+          "cpu_pct": 25.0,
+          "ram_pct": 25.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "fog-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "edge-01",
+          "cpu_pct": 43.75,
+          "ram_pct": 31.25
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "fog-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "edge-01",
+          "cpu_pct": 50.0,
+          "ram_pct": 50.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "fog-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "edge-01",
+          "cpu_pct": 62.5,
+          "ram_pct": 62.5
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "fog-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "edge-01",
+          "cpu_pct": 81.25,
+          "ram_pct": 65.62
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "fog-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "edge-01",
+          "cpu_pct": 87.5,
+          "ram_pct": 78.12
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "fog-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "edge-01",
+          "cpu_pct": 100.0,
+          "ram_pct": 96.88
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "fog-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "edge-01",
+          "cpu_pct": 100.0,
+          "ram_pct": 96.88
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "fog-01",
+          "cpu_pct": 6.25,
+          "ram_pct": 6.25
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "edge-01",
+          "cpu_pct": 100.0,
+          "ram_pct": 96.88
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "fog-01",
+          "cpu_pct": 31.25,
+          "ram_pct": 18.75
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "edge-01",
+          "cpu_pct": 100.0,
+          "ram_pct": 96.88
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "fog-01",
+          "cpu_pct": 37.5,
+          "ram_pct": 25.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "edge-01",
+          "cpu_pct": 100.0,
+          "ram_pct": 96.88
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "fog-01",
+          "cpu_pct": 43.75,
+          "ram_pct": 28.12
+        },
+        {
+          "time_ms": 0.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 40.75,
+          "node_id": "edge-01",
+          "cpu_pct": 81.25,
+          "ram_pct": 90.62
+        },
+        {
+          "time_ms": 40.75,
+          "node_id": "fog-01",
+          "cpu_pct": 43.75,
+          "ram_pct": 28.12
+        },
+        {
+          "time_ms": 40.75,
+          "node_id": "cloud-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 44.5,
+          "node_id": "edge-01",
+          "cpu_pct": 68.75,
+          "ram_pct": 78.12
+        },
+        {
+          "time_ms": 44.5,
+          "node_id": "fog-01",
+          "cpu_pct": 43.75,
+          "ram_pct": 28.12
+        },
+        {
+          "time_ms": 44.5,
+          "node_id": "cloud-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 45.75,
+          "node_id": "edge-01",
+          "cpu_pct": 56.25,
+          "ram_pct": 59.38
+        },
+        {
+          "time_ms": 45.75,
+          "node_id": "fog-01",
+          "cpu_pct": 43.75,
+          "ram_pct": 28.12
+        },
+        {
+          "time_ms": 45.75,
+          "node_id": "cloud-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 48.25,
+          "node_id": "edge-01",
+          "cpu_pct": 37.5,
+          "ram_pct": 56.25
+        },
+        {
+          "time_ms": 48.25,
+          "node_id": "fog-01",
+          "cpu_pct": 43.75,
+          "ram_pct": 28.12
+        },
+        {
+          "time_ms": 48.25,
+          "node_id": "cloud-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 52.0,
+          "node_id": "edge-01",
+          "cpu_pct": 25.0,
+          "ram_pct": 37.5
+        },
+        {
+          "time_ms": 52.0,
+          "node_id": "fog-01",
+          "cpu_pct": 43.75,
+          "ram_pct": 28.12
+        },
+        {
+          "time_ms": 52.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 59.5,
+          "node_id": "edge-01",
+          "cpu_pct": 18.75,
+          "ram_pct": 25.0
+        },
+        {
+          "time_ms": 59.5,
+          "node_id": "fog-01",
+          "cpu_pct": 43.75,
+          "ram_pct": 28.12
+        },
+        {
+          "time_ms": 59.5,
+          "node_id": "cloud-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 59.5,
+          "node_id": "edge-01",
+          "cpu_pct": 18.75,
+          "ram_pct": 25.0
+        },
+        {
+          "time_ms": 59.5,
+          "node_id": "fog-01",
+          "cpu_pct": 37.5,
+          "ram_pct": 21.88
+        },
+        {
+          "time_ms": 59.5,
+          "node_id": "cloud-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 63.25,
+          "node_id": "edge-01",
+          "cpu_pct": 18.75,
+          "ram_pct": 25.0
+        },
+        {
+          "time_ms": 63.25,
+          "node_id": "fog-01",
+          "cpu_pct": 31.25,
+          "ram_pct": 15.62
+        },
+        {
+          "time_ms": 63.25,
+          "node_id": "cloud-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 67.0,
+          "node_id": "edge-01",
+          "cpu_pct": 6.25,
+          "ram_pct": 18.75
+        },
+        {
+          "time_ms": 67.0,
+          "node_id": "fog-01",
+          "cpu_pct": 31.25,
+          "ram_pct": 15.62
+        },
+        {
+          "time_ms": 67.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 68.25,
+          "node_id": "edge-01",
+          "cpu_pct": 6.25,
+          "ram_pct": 18.75
+        },
+        {
+          "time_ms": 68.25,
+          "node_id": "fog-01",
+          "cpu_pct": 6.25,
+          "ram_pct": 3.12
+        },
+        {
+          "time_ms": 68.25,
+          "node_id": "cloud-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 72.0,
+          "node_id": "edge-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 72.0,
+          "node_id": "fog-01",
+          "cpu_pct": 6.25,
+          "ram_pct": 3.12
+        },
+        {
+          "time_ms": 72.0,
+          "node_id": "cloud-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 90.75,
+          "node_id": "edge-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 90.75,
+          "node_id": "fog-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        },
+        {
+          "time_ms": 90.75,
+          "node_id": "cloud-01",
+          "cpu_pct": 0.0,
+          "ram_pct": 0.0
+        }
+      ],
+      "policy": "lowest_latency"
+    }
+  },
+  "summary": [
+    {
+      "run": "policy_latency",
+      "policy": "lowest_latency",
+      "total": 12,
+      "admitted": 12,
+      "completed": 12,
+      "rejected": 0,
+      "cancelled": 0,
+      "running": 0,
+      "mean_latency_ms": 69.25,
+      "qos_success_pct": 100.0,
+      "clock_ms": 100.75
+    },
+    {
+      "run": "policy_capacity",
+      "policy": "capacity_aware",
+      "total": 12,
+      "admitted": 12,
+      "completed": 12,
+      "rejected": 0,
+      "cancelled": 0,
+      "running": 0,
+      "mean_latency_ms": 97.099,
+      "qos_success_pct": 100.0,
+      "clock_ms": 151.562
+    },
+    {
+      "run": "overload",
+      "policy": "lowest_latency",
+      "total": 30,
+      "admitted": 17,
+      "completed": 17,
+      "rejected": 13,
+      "cancelled": 0,
+      "running": 0,
+      "mean_latency_ms": 107.757,
+      "qos_success_pct": 56.67,
+      "clock_ms": 143.75
+    },
+    {
+      "run": "upgraded_edge",
+      "policy": "lowest_latency",
+      "total": 12,
+      "admitted": 12,
+      "completed": 12,
+      "rejected": 0,
+      "cancelled": 0,
+      "running": 0,
+      "mean_latency_ms": 59.292,
+      "qos_success_pct": 100.0,
+      "clock_ms": 90.75
+    }
+  ],
+  "security": {
+    "denied": true,
+    "export_isolated": true,
+    "bob_visible_task_ids": [
+      "PRIVATE-B"
+    ],
+    "audit": [
+      {
+        "time_ms": 0.0,
+        "user_id": "alice",
+        "tenant_id": "team-a",
+        "action": "submit",
+        "target": "PRIVATE-A",
+        "outcome": "allowed"
+      },
+      {
+        "time_ms": 0.0,
+        "user_id": "bob",
+        "tenant_id": "team-b",
+        "action": "submit",
+        "target": "PRIVATE-B",
+        "outcome": "allowed"
+      },
+      {
+        "time_ms": 0.0,
+        "user_id": "bob",
+        "tenant_id": "team-b",
+        "action": "read_task",
+        "target": "PRIVATE-A",
+        "outcome": "denied"
+      }
+    ]
+  }
+}

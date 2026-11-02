@@ -1,0 +1,10 @@
+{
+  "page_errors": [],
+  "screenshots": 4,
+  "workflows": [
+    "workload",
+    "experiments",
+    "unauthorized access",
+    "VM stop and completion"
+  ]
+}

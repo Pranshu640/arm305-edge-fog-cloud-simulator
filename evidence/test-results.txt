@@ -1,0 +1,27 @@
+test_experiments_and_tenant_view (test_app.AppTests.test_experiments_and_tenant_view) ... 2026-11-02 15:15:19.763 WARNING streamlit.runtime.scriptrunner_utils.script_run_context: Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+ok
+test_security_demonstration (test_app.AppTests.test_security_demonstration) ... 2026-11-02 15:15:21.235 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+ok
+test_workload_and_vm_stop (test_app.AppTests.test_workload_and_vm_stop) ... 2026-11-02 15:15:21.559 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+ok
+test_arrival_reuses_completed_capacity (test_simulator.SimulatorTests.test_arrival_reuses_completed_capacity) ... ok
+test_batch_rejects_atomically (test_simulator.SimulatorTests.test_batch_rejects_atomically) ... ok
+test_cannot_submit_for_another_tenant (test_simulator.SimulatorTests.test_cannot_submit_for_another_tenant) ... ok
+test_capacity_fallback_and_rejection (test_simulator.SimulatorTests.test_capacity_fallback_and_rejection) ... ok
+test_completion_releases_resources_and_keeps_peak (test_simulator.SimulatorTests.test_completion_releases_resources_and_keeps_peak) ... ok
+test_duplicate_batch_and_existing_id (test_simulator.SimulatorTests.test_duplicate_batch_and_existing_id) ... ok
+test_four_required_experiments (test_simulator.SimulatorTests.test_four_required_experiments) ... ok
+test_invalid_resources (test_simulator.SimulatorTests.test_invalid_resources) ... ok
+test_latency_budget_rejects (test_simulator.SimulatorTests.test_latency_budget_rejects) ... ok
+test_no_time_travel (test_simulator.SimulatorTests.test_no_time_travel) ... ok
+test_node_config_role_and_live_state (test_simulator.SimulatorTests.test_node_config_role_and_live_state) ... ok
+test_ram_independent_of_cpu (test_simulator.SimulatorTests.test_ram_independent_of_cpu) ... ok
+test_seed_reproducibility (test_simulator.SimulatorTests.test_seed_reproducibility) ... ok
+test_snapshots_never_exceed_capacity (test_simulator.SimulatorTests.test_snapshots_never_exceed_capacity) ... ok
+test_stop_releases_once (test_simulator.SimulatorTests.test_stop_releases_once) ... ok
+test_tenant_read_list_export_and_stop (test_simulator.SimulatorTests.test_tenant_read_list_export_and_stop) ... ok
+
+----------------------------------------------------------------------
+Ran 19 tests in 2.511s
+
+OK
